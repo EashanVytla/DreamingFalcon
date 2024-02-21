@@ -10,6 +10,9 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.distributions as td
+
+import numpy as np
 
 import yaml
 from attrdict import AttrDict
@@ -27,6 +30,46 @@ def horizontal_forward(network, x, y=None, input_shape=(-1,), output_shape=(-1,)
     x = x.reshape(*batch_with_horizon_shape, *output_shape)
     return x
 
+def get_dist(state, argmax=False):
+        """
+        get_dist takes in a stochastic state and returns a pytorch distribution
+
+        :param state: stochastic state after logit function
+        :return: pytorch distribution of stochastic state rep
+        """ 
+
+        logit = state.float()
+        dist = td.Independent(OneHotDist(logit), 1)
+        return dist
+
+def create_stoch(x, stoch, classes, unimix):
+    """
+    create_stoch converts output vector of representation model
+    or transition model into a categorical stochastic rep.
+
+    :param x: output layer (to be used as input to this function)
+    :param stoch: from config yaml 
+    :param classes: from config yaml
+    :param unimix: from config yaml (config.unimix)
+    :return: categorical stochastic rep logit
+    """ 
+    logit = x.view(*x.shape[:-1], stoch, classes)
+
+    # Check if unimix is True
+    if unimix:
+        # Softmax along the last dimension
+        probs = torch.nn.functional.softmax(logit, dim=-1)
+        
+        # Uniform distribution
+        uniform = torch.ones_like(probs) / probs.shape[-1]
+        
+        # Combine unimix and uniform distributions
+        probs = (1 - unimix) * probs + unimix * uniform
+        
+        # Compute logit from probabilities
+        logit = torch.log(probs)
+
+    return logit
 
 def build_network(input_size, hidden_size, num_layers, activation, output_size):
     assert num_layers >= 2, "num_layers must be at least 2"
@@ -74,6 +117,30 @@ def compute_lambda_values(rewards, values, continues, horizon_length, device, la
     returns = torch.stack(list(reversed(outputs)), dim=1).to(device)
     return returns
 
+class OneHotDist(td.OneHotCategorical):
+    def __init__(self, logits=None, probs=None, dtype=torch.float32):
+        super().__init__(logits=logits, probs=probs, dtype=dtype)
+
+    def sample(self, sample_shape=()):
+        if not isinstance(sample_shape, (list, tuple)):
+            sample_shape = (sample_shape,)
+        logits = self.logits_parameter().to(self.dtype)
+        shape = logits.shape
+        logits = logits.view([-1, shape[-1]])
+        indices = torch.multinomial(F.softmax(logits, dim=-1), np.prod(sample_shape), replacement=True)
+        sample = F.one_hot(indices, shape[-1]).float()
+        if np.prod(sample_shape) != 1:
+            sample = sample.permute((1, 0, 2))
+        sample = sample.reshape(sample_shape + shape)
+        # Straight through biased gradient estimator.
+        probs = self._pad(super().probs_parameter(), sample.shape)
+        sample += probs - probs.detach()
+        return sample
+
+    def _pad(self, tensor, shape):
+        while len(tensor.shape) < len(shape):
+            tensor = tensor.unsqueeze(0)
+        return tensor
 
 class DynamicInfos:
     def __init__(self, device):
