@@ -7,7 +7,6 @@ import numpy as np
 
 from utils import build_network, horizontal_forward, get_dist
 
-
 class RSSM(nn.Module):
     def __init__(self, action_size, config):
         super().__init__()
@@ -136,49 +135,3 @@ class RepresentationModel(nn.Module):
         post_dist = get_dist(self.create_stoch(x, self.config.stoch, self.config.classes, self.config.unimix))
         post = post_dist.sample()
         return post_dist, post
-
-
-class RewardModel(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config.parameters.dreamer.reward
-        self.stochastic_size = config.parameters.dreamer.stochastic_size
-        self.deterministic_size = config.parameters.dreamer.deterministic_size
-
-        self.network = build_network(
-            self.stochastic_size + self.deterministic_size,
-            self.config.hidden_size,
-            self.config.num_layers,
-            self.config.activation,
-            1,
-        )
-
-    def forward(self, posterior, deterministic):
-        x = horizontal_forward(
-            self.network, posterior, deterministic, output_shape=(1,)
-        )
-        dist = create_normal_dist(x, std=1, event_shape=1)
-        return dist
-
-
-class ContinueModel(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config.parameters.dreamer.continue_
-        self.stochastic_size = config.parameters.dreamer.stochastic_size
-        self.deterministic_size = config.parameters.dreamer.deterministic_size
-
-        self.network = build_network(
-            self.stochastic_size + self.deterministic_size,
-            self.config.hidden_size,
-            self.config.num_layers,
-            self.config.activation,
-            1,
-        )
-
-    def forward(self, posterior, deterministic):
-        x = horizontal_forward(
-            self.network, posterior, deterministic, output_shape=(1,)
-        )
-        dist = torch.distributions.Bernoulli(logits=x)
-        return dist
