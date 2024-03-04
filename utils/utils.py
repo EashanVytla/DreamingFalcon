@@ -71,6 +71,13 @@ def create_stoch(x, stoch, classes, unimix):
 
     return logit
 
+def symlog(x):
+    return torch.sign(x) * torch.log(torch.abs(x) + 1.0)
+
+
+def symexp(x):
+    return torch.sign(x) * (torch.exp(torch.abs(x)) - 1.0)
+
 def build_network(input_size, hidden_size, num_layers, activation, output_size):
     assert num_layers >= 2, "num_layers must be at least 2"
     activation = getattr(nn, activation)()
@@ -117,30 +124,42 @@ def compute_lambda_values(rewards, values, continues, horizon_length, device, la
     returns = torch.stack(list(reversed(outputs)), dim=1).to(device)
     return returns
 
-class OneHotDist(td.OneHotCategorical):
-    def __init__(self, logits=None, probs=None, dtype=torch.float32):
-        super().__init__(logits=logits, probs=probs, dtype=dtype)
+class RequiresGrad:
+    def __init__(self, model):
+        self._model = model
 
-    def sample(self, sample_shape=()):
-        if not isinstance(sample_shape, (list, tuple)):
-            sample_shape = (sample_shape,)
-        logits = self.logits_parameter().to(self.dtype)
-        shape = logits.shape
-        logits = logits.view([-1, shape[-1]])
-        indices = torch.multinomial(F.softmax(logits, dim=-1), np.prod(sample_shape), replacement=True)
-        sample = F.one_hot(indices, shape[-1]).float()
-        if np.prod(sample_shape) != 1:
-            sample = sample.permute((1, 0, 2))
-        sample = sample.reshape(sample_shape + shape)
-        # Straight through biased gradient estimator.
-        probs = self._pad(super().probs_parameter(), sample.shape)
+    def __enter__(self):
+        self._model.requires_grad_(requires_grad=True)
+
+    def __exit__(self, *args):
+        self._model.requires_grad_(requires_grad=False)
+
+
+class OneHotDist(td.one_hot_categorical.OneHotCategorical):
+    def __init__(self, logits=None, probs=None, unimix_ratio=0.0):
+        if logits is not None and unimix_ratio > 0.0:
+            probs = F.softmax(logits, dim=-1)
+            probs = probs * (1.0 - unimix_ratio) + unimix_ratio / probs.shape[-1]
+            logits = torch.log(probs)
+            super().__init__(logits=logits, probs=None)
+        else:
+            super().__init__(logits=logits, probs=probs)
+
+    def mode(self):
+        _mode = F.one_hot(
+            torch.argmax(super().logits, axis=-1), super().logits.shape[-1]
+        )
+        return _mode.detach() + super().logits - super().logits.detach()
+
+    def sample(self, sample_shape=(), seed=None):
+        if seed is not None:
+            raise ValueError("need to check")
+        sample = super().sample(sample_shape)
+        probs = super().probs
+        while len(probs.shape) < len(sample.shape):
+            probs = probs[None]
         sample += probs - probs.detach()
         return sample
-
-    def _pad(self, tensor, shape):
-        while len(tensor.shape) < len(shape):
-            tensor = tensor.unsqueeze(0)
-        return tensor
 
 class DynamicInfos:
     def __init__(self, device):

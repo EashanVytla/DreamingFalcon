@@ -17,9 +17,8 @@ class RSSM(nn.Module):
         self.representation_model = RepresentationModel(config)
 
     def recurrent_model_input_init(self, batch_size):
-        return self.transition_model.input_init(
-            batch_size
-        ), self.recurrent_model.input_init(batch_size)
+        #returns post, prior
+        return self.representation_model.input_init(batch_size), self.transition_model.input_init(batch_size)
     
     def img_step(self, prev_state, prev_action):
         """
@@ -31,23 +30,51 @@ class RSSM(nn.Module):
         :return: prior state dictionary {'stoch': z-hat value, 'deter': h_t value}
         """ 
         x = self.recurrent_model(prev_state, prev_action)
-        z_hat_dist, z_hat = self.transition_model(x)
-        prior = {'stoch': z_hat_dist, 'deter': z_hat}
+        z_hat_dist = self.transition_model(x)
+        prior = {'stoch': z_hat_dist, 'deter': x}
 
         return prior
     
-    def obj_step(self, prev_state, prev_action, embed):
+    def obs_step(self, prev_state, prev_action, embed):
         """
         obj_step computes the posterior stochastic state (z) based on the prev_state and prev_action
 
         :param prev_state: previous deterministic & stochastic hidden state (in a dictionary)
         :param prev_action: last action
         :return: prior state dictionary {'stoch': z-hat value, 'deter': h_t value}
-        """ 
+        """
         prior = self.img_step(prev_state, prev_action)
-        z_dist, z = self.representation_model(prior['deter'], embed)
-        post = {'stoch': z_dist, 'deter': z}
+        z_dist = self.representation_model(prior['deter'], embed)
+        post = {'stoch': z_dist, 'deter': prior['deter']}
         return post, prior
+
+    def observation(self, embed, action):
+        prev_state, prior = self.recurrent_model_init(len(action))
+        prev_action = action[0]
+        outputs = []
+
+        for i in range(1, len(action)):
+            outputs.append = self.obs_step(prev_state, prev_action, embed)
+            prev_state = outputs[i][0]
+            prev_action = action[i]
+
+        return outputs
+
+    
+    def kl_loss(self, post, prior, dyn_scale, rep_scale):
+        kld = td.kl.kl_divergence
+        dist = lambda x: get_dist(x)
+        sg = lambda x: {k: v.detach() for k, v in x.items()}
+
+        rep_loss = value = kld(dist(post)._dist, dist(sg(prior))._dist,)
+        dyn_loss = kld(dist(sg(post))._dist, dist(prior)._dist)
+
+        rep_loss = torch.clip(rep_loss, min=1)
+        dyn_loss = torch.clip(dyn_loss, min=1)
+        loss = dyn_scale * dyn_loss + rep_scale * rep_loss
+
+        return loss, value, dyn_loss, rep_loss
+
 
 class RecurrentModel(nn.Module):
     def __init__(self, action_size, config):
@@ -102,7 +129,7 @@ class TransitionModel(nn.Module):
         x = self.network(x)
         prior_dist = get_dist(self.create_stoch(x, self.config.stoch, self.config.classes, self.config.unimix))
         prior = prior_dist.sample()
-        return prior_dist, prior
+        return prior
 
     def input_init(self, batch_size):
         return torch.zeros(batch_size, self.stochastic_size).to(self.device)
@@ -134,4 +161,4 @@ class RepresentationModel(nn.Module):
         x = self.network(torch.cat((embedded_observation, deterministic), 1))
         post_dist = get_dist(self.create_stoch(x, self.config.stoch, self.config.classes, self.config.unimix))
         post = post_dist.sample()
-        return post_dist, post
+        return post
