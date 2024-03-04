@@ -5,7 +5,7 @@ import torch.distributions as td
 from torch.distributions import Normal
 import numpy as np
 
-from utils import build_network, horizontal_forward, get_dist
+from utils.utils import build_network, horizontal_forward, get_dist
 
 class RSSM(nn.Module):
     def __init__(self, action_size, config):
@@ -54,7 +54,7 @@ class RSSM(nn.Module):
         outputs = []
 
         for i in range(1, len(action)):
-            outputs.append = self.obs_step(prev_state, prev_action, embed)
+            outputs.append(self.obs_step(prev_state, prev_action, embed))
             prev_state = outputs[i][0]
             prev_action = action[i]
 

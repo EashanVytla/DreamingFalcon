@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from modules import encoder, decoder, model
-from utils import build_network, RequiresGrad
+from modules import model
+from utils.utils import build_network, RequiresGrad
 
 class WorldModel(nn.Module):
   def __init__(self, obs_space, act_space, config):
@@ -46,12 +46,11 @@ class WorldModel(nn.Module):
         embed = self.encoder(data['state'])
         post, prior = self.rssm.observation(embed, data['action'])
 
-        kl_scale = self.config.loss_scales.kl
         dyn_scale = self.config.loss_scales.dyn
         rep_scale = self.config.loss_scales.rep
 
         kl_loss, kl_value, dyn_loss, rep_loss = self.rssm.kl_loss(
-                    post, prior, kl_scale, dyn_scale, rep_scale
+                    post, prior, dyn_scale, rep_scale
                 )
         
         assert kl_loss.shape == embed.shape[:2], kl_loss.shape

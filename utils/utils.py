@@ -97,12 +97,8 @@ def build_network(input_size, hidden_size, num_layers, activation, output_size):
 
 
 def initialize_weights(m):
-    if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
-        nn.init.kaiming_uniform_(m.weight.data, nonlinearity="relu")
-        nn.init.constant_(m.bias.data, 0)
-    elif isinstance(m, nn.Linear):
-        nn.init.kaiming_uniform_(m.weight.data)
-        nn.init.constant_(m.bias.data, 0)
+    nn.init.kaiming_uniform_(m.weight.data)
+    nn.init.constant_(m.bias.data, 0)
 
 def compute_lambda_values(rewards, values, continues, horizon_length, device, lambda_):
     """
@@ -134,6 +130,33 @@ class RequiresGrad:
     def __exit__(self, *args):
         self._model.requires_grad_(requires_grad=False)
 
+class ContDist:
+    def __init__(self, dist=None, absmax=None):
+        super().__init__()
+        self._dist = dist
+        self.mean = dist.mean
+        self.absmax = absmax
+
+    def __getattr__(self, name):
+        return getattr(self._dist, name)
+
+    def entropy(self):
+        return self._dist.entropy()
+
+    def mode(self):
+        out = self._dist.mean
+        if self.absmax is not None:
+            out *= (self.absmax / torch.clip(torch.abs(out), min=self.absmax)).detach()
+        return out
+
+    def sample(self, sample_shape=()):
+        out = self._dist.rsample(sample_shape)
+        if self.absmax is not None:
+            out *= (self.absmax / torch.clip(torch.abs(out), min=self.absmax)).detach()
+        return out
+
+    def log_prob(self, x):
+        return self._dist.log_prob(x)
 
 class OneHotDist(td.one_hot_categorical.OneHotCategorical):
     def __init__(self, logits=None, probs=None, unimix_ratio=0.0):
@@ -209,28 +232,3 @@ def load_config(config_path):
     with open(config_path) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     return AttrDict(config)
-
-class OneHotDist(td.OneHotCategorical):
-    def __init__(self, logits=None, probs=None, dtype=torch.float32):
-        super().__init__(logits=logits, probs=probs, dtype=dtype)
-
-    def sample(self, sample_shape=()):
-        if not isinstance(sample_shape, (list, tuple)):
-            sample_shape = (sample_shape,)
-        logits = self.logits_parameter().to(self.dtype)
-        shape = logits.shape
-        logits = logits.view([-1, shape[-1]])
-        indices = torch.multinomial(F.softmax(logits, dim=-1), prod(sample_shape), replacement=True)
-        sample = F.one_hot(indices, shape[-1]).float()
-        if prod(sample_shape) != 1:
-            sample = sample.permute((1, 0, 2))
-        sample = sample.reshape(sample_shape + shape)
-        # Straight through biased gradient estimator.
-        probs = self._pad(super().probs_parameter(), sample.shape)
-        sample += probs - probs.detach()
-        return sample
-
-    def _pad(self, tensor, shape):
-        while len(tensor.shape) < len(shape):
-            tensor = tensor.unsqueeze(0)
-        return tensor
