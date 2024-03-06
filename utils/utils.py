@@ -39,7 +39,7 @@ def get_dist(state, argmax=False):
         """ 
 
         logit = state.float()
-        dist = td.Independent(OneHotDist(logit), 1)
+        dist = td.independent.Independent(OneHotDist(logit), 1)
         return dist
 
 def create_stoch(x, stoch, classes, unimix):
@@ -131,7 +131,7 @@ class RequiresGrad:
         self._model.requires_grad_(requires_grad=False)
 
 class ContDist:
-    def __init__(self, dist=None, absmax=None):
+    def __init__(self, dist, absmax):
         super().__init__()
         self._dist = dist
         self.mean = dist.mean
@@ -141,22 +141,22 @@ class ContDist:
         return getattr(self._dist, name)
 
     def entropy(self):
-        return self._dist.entropy()
+        return self.entropy()
 
     def mode(self):
-        out = self._dist.mean
+        out = self.mean
         if self.absmax is not None:
             out *= (self.absmax / torch.clip(torch.abs(out), min=self.absmax)).detach()
         return out
 
     def sample(self, sample_shape=()):
-        out = self._dist.rsample(sample_shape)
+        out = self.rsample(sample_shape)
         if self.absmax is not None:
             out *= (self.absmax / torch.clip(torch.abs(out), min=self.absmax)).detach()
         return out
 
     def log_prob(self, x):
-        return self._dist.log_prob(x)
+        return self.log_prob(x)
 
 class OneHotDist(td.one_hot_categorical.OneHotCategorical):
     def __init__(self, logits=None, probs=None, unimix_ratio=0.0):

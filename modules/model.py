@@ -66,8 +66,8 @@ class RSSM(nn.Module):
         dist = lambda x: get_dist(x)
         sg = lambda x: {k: v.detach() for k, v in x.items()}
 
-        rep_loss = value = kld(dist(post)._dist, dist(sg(prior))._dist,)
-        dyn_loss = kld(dist(sg(post))._dist, dist(prior)._dist)
+        rep_loss = value = kld(dist(post), dist(sg(prior)))
+        dyn_loss = kld(dist(sg(post)), dist(prior))
 
         rep_loss = torch.clip(rep_loss, min=1)
         dyn_loss = torch.clip(dyn_loss, min=1)
