@@ -32,8 +32,6 @@ for i = 1:8208
     imuval(15,i) = -69;
     imuval(16,i) = -69;
     imuval(17,i) = -69;
-    imuval(18,i) = -69;
-    imuval(19,i) = -69;
 end
 
 imu = [imuclock;imuval];
@@ -62,8 +60,6 @@ for i = 1:8208
     magval(15,i) = -69;
     magval(16,i) = -69;
     magval(17,i) = -69;
-    magval(18,i) = -69;
-    magval(19,i) = -69;
 end
 
 mag = [magclock;magval];
@@ -91,8 +87,6 @@ for i = 1:3055
     barroval(15,i) = -69;
     barroval(16,i) = -69;
     barroval(17,i) = -69;
-    barroval(18,i) = -69;
-    barroval(19,i) = -69;
 end
 
 barro = [barroclock;barroval];
@@ -113,15 +107,13 @@ for i = 1:1283
     gpsval(8,i) = -69;
     gpsval(9,i) = -69;
     gpsval(10,i) = -69;
-    gpsval(11,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix{i, 1}.Latitude;
-    gpsval(12,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix{i, 1}.Longitude;
-    gpsval(13,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix{i, 1}.Altitude;
-    gpsval(14,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.X;
-    gpsval(15,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.Y;
-    gpsval(16,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.Z;
-    gpsval(17,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.X;
-    gpsval(18,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.Y;
-    gpsval(19,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.Z;
+    gpsval(11,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix{i, 1}.Altitude;
+    gpsval(12,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.X;
+    gpsval(13,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.Y;
+    gpsval(14,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.Z;
+    gpsval(15,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.X;
+    gpsval(16,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.Y;
+    gpsval(17,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.Z;
 end
 
 gps = [gpsclock;gpsval];
@@ -129,36 +121,89 @@ gps = [gpsclock;gpsval];
 
 Bigboi = [imu,mag,barro,gps];
 
+
+
 Bigboi = transpose(Bigboi);
 
 Bigboi = sortrows(Bigboi, 1);
 
-for i = 2:20
+for i = 2:18
     if Bigboi(1,i) == -69
         Bigboi(1,i) = 0;
     end
 end
 
 for i = 2:20754
-    for j = 2:20
+    for j = 2:18
         if Bigboi(i,j) == -69
             Bigboi(i,j) = Bigboi(i-1,j);
         end
     end
 end
 
+%imu range
+for i = 2:7
+    Bigboi(20755,i) = 25;%max
+    Bigboi(20756,i) = -25;%min
+end
+
+%mag range
+for i = 8:10
+    Bigboi(20755,i) = 25;%max
+    Bigboi(20756,i) = -25;%min
+end
+
+%baro
+Bigboi(20755,11) = 101325;%max
+Bigboi(20756,11) = 0;%min
+
+%gps
+
+Bigboi(20755,12) = 50;%max alt
+Bigboi(20756,12) = -50;%min alt
+
+for i = 13:18
+    Bigboi(20755,i) = 1;%max
+    Bigboi(20756,i) = -1;%min
+end
+
+%imu stuff
+Bigboi(:,2) = normalize(Bigboi(:,2),'range');
+Bigboi(:,3) = normalize(Bigboi(:,3),'range');
+Bigboi(:,4) = normalize(Bigboi(:,4),'range');
+Bigboi(:,5) = normalize(Bigboi(:,5),'range');
+Bigboi(:,6) = normalize(Bigboi(:,6),'range');
+Bigboi(:,7) = normalize(Bigboi(:,7),'range');
+
+%mag
+Bigboi(:,8) = normalize(Bigboi(:,8),'range');
+Bigboi(:,9) = normalize(Bigboi(:,9),'range');
+Bigboi(:,10) = normalize(Bigboi(:,10),'range');
+
+%baro
+Bigboi(:,11) = normalize(Bigboi(:,11),'range');
+
+%gps
+Bigboi(:,12) = normalize(Bigboi(:,12),'range');
+Bigboi(:,13) = normalize(Bigboi(:,13),'range');
+Bigboi(:,14) = normalize(Bigboi(:,14),'range');
+Bigboi(:,15) = normalize(Bigboi(:,15),'range');
+Bigboi(:,16) = normalize(Bigboi(:,16),'range');
+Bigboi(:,17) = normalize(Bigboi(:,17),'range');
+Bigboi(:,18) = normalize(Bigboi(:,18),'range');
 
 
 
-hz = 1/(Bigboi(200,1) - Bigboi(199,1));
 
-disp(hz);
+% hz = 1/(Bigboi(200,1) - Bigboi(199,1));
+% 
+% disp(hz);
+% 
+% imuhz = 1/(imuclock(2) - imuclock(1));
+% barrohz = 1/(barroclock(2) - barroclock(1));
+% gpshz = 1/(gpsclock(2) - gpsclock(1));
 
-imuhz = 1/(imuclock(2) - imuclock(1));
-barrohz = 1/(barroclock(2) - barroclock(1));
-gpshz = 1/(gpsclock(2) - gpsclock(1));
-
-fprintf('IMU: %f\nBarro: %f\nGps: %f\n',imuhz, barrohz, gpshz)
+%fprintf('IMU: %f\nBarro: %f\nGps: %f\n',imuhz, barrohz, gpshz)
 
 %disp(sensorData.x0x2Fmavros0x2Fimu0x2Fdata{1, 1}.Header.Stamp.Sec + ((sensorData.x0x2Fmavros0x2Fimu0x2Fdata{1, 1}.Header.Stamp.Nsec)/10^9))
 

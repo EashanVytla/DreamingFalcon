@@ -1,5 +1,5 @@
 % Specify the path to your bag file
-bagFilePath = '2023-10-13-10-37-04.bag';
+bagFilePath = '2023-10-13-07-28-08.bag';
 
 % Load the bag file
 bag = rosbag(bagFilePath);
