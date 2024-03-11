@@ -27,8 +27,5 @@ for i = 1:numel(topics)
     sensorData.(genvarname(topics{i})) = readMessages(msgs);
 end
 
-
-
-
 % Display the struct containing the sensor data
 disp(sensorData);

@@ -10,7 +10,7 @@ def main():
 
     pipeline = Pipeline(r"data/states.csv", r"data/actions.csv")
     pipeline.read_csv()
-    pipeline.prepare_data()
+    pipeline.prepare_data(25)
 
     model.train(pipeline.get_data())
 

@@ -2,7 +2,8 @@
 CSE 5539 Intermediate Studies in AI project
 
 TODO:
-2) Normalize the data
+1) Normalize the data
+2) Try adding in SimLog input
 3) Complete the data pipeline
 4) Add batch sizes
 5) Add metrics and cmd outputs to monitor progress
