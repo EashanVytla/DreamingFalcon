@@ -201,11 +201,16 @@ Bigboi(:,20) = normalize(Bigboi(:,20),'range');
 Bigboi(:,21) = normalize(Bigboi(:,21),'range');
 Bigboi(:,22) = normalize(Bigboi(:,22),'range');
 
-Bigboi = transpose(Bigboi);
+ActBoi = [Bigboi(:,1),Bigboi(:,19:22)];
+Bigboi = Bigboi(:,1:18);
 
-ActBoi = [Bigboi(1,:);Bigboi(19:22,:)];
 
-Bigboi = Bigboi(1:18,:);
+% Uncomment if Eashan is a bot again
+% Bigboi = transpose(Bigboi);
+% 
+% ActBoi = [Bigboi(1,:);Bigboi(19:22,:)];
+% 
+% Bigboi = Bigboi(1:18,:);
 
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\2023-10-13-07-28-08\states.csv', Bigboi);
 
