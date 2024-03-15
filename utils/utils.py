@@ -30,17 +30,59 @@ def horizontal_forward(network, x, y=None, input_shape=(-1,), output_shape=(-1,)
     x = x.reshape(*batch_with_horizon_shape, *output_shape)
     return x
 
-def get_dist(state, argmax=False):
-        """
-        get_dist takes in a stochastic state and returns a pytorch distribution
+def uniform_weight_init(given_scale):
+    def f(m):
+        if isinstance(m, nn.Linear):
+            in_num = m.in_features
+            out_num = m.out_features
+            denoms = (in_num + out_num) / 2.0
+            scale = given_scale / denoms
+            limit = np.sqrt(3 * scale)
+            nn.init.uniform_(m.weight.data, a=-limit, b=limit)
+            if hasattr(m.bias, "data"):
+                m.bias.data.fill_(0.0)
+        elif isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+            space = m.kernel_size[0] * m.kernel_size[1]
+            in_num = space * m.in_channels
+            out_num = space * m.out_channels
+            denoms = (in_num + out_num) / 2.0
+            scale = given_scale / denoms
+            limit = np.sqrt(3 * scale)
+            nn.init.uniform_(m.weight.data, a=-limit, b=limit)
+            if hasattr(m.bias, "data"):
+                m.bias.data.fill_(0.0)
+        elif isinstance(m, nn.LayerNorm):
+            m.weight.data.fill_(1.0)
+            if hasattr(m.bias, "data"):
+                m.bias.data.fill_(0.0)
 
-        :param state: stochastic state after logit function
-        :return: pytorch distribution of stochastic state rep
-        """ 
+    return f
 
-        logit = state.float()
-        dist = td.independent.Independent(OneHotDist(logit), 1)
-        return dist
+def create_stoch_cont(x, stoch, unimix):
+    """
+    create_stoch converts output vector of representation model
+    or transition model into a categorical stochastic rep.
+
+    :param x: output layer (to be used as input to this function)
+    :param stoch: from config yaml 
+    :param classes: from config yaml
+    :param unimix: from config yaml (config.unimix)
+    :return: categorical stochastic rep logit
+    """ 
+
+    # Softmax along the last dimension
+    probs = torch.nn.functional.softmax(stoch, dim=-1)
+    
+    # Uniform distribution
+    uniform = torch.ones_like(probs) / probs.shape[-1]
+    
+    # Combine unimix and uniform distributions
+    probs = (1 - unimix) * probs + unimix * uniform
+    
+    # Compute logit from probabilities
+    logit = torch.log(probs)
+
+    return logit
 
 def create_stoch(x, stoch, classes, unimix):
     """
@@ -97,8 +139,9 @@ def build_network(input_size, hidden_size, num_layers, activation, output_size):
 
 
 def initialize_weights(m):
-    nn.init.kaiming_uniform_(m.weight.data)
-    nn.init.constant_(m.bias.data, 0)
+    if isinstance(m, nn.Linear):
+        nn.init.kaiming_uniform_(m.weight.data)
+        nn.init.constant_(m.bias.data, 0)
 
 def compute_lambda_values(rewards, values, continues, horizon_length, device, lambda_):
     """
@@ -131,7 +174,7 @@ class RequiresGrad:
         self._model.requires_grad_(requires_grad=False)
 
 class ContDist:
-    def __init__(self, dist, absmax):
+    def __init__(self, dist=None, absmax=None):
         super().__init__()
         self._dist = dist
         self.mean = dist.mean

@@ -1,33 +1,31 @@
 import torch
 import pandas as pd
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 
 class Pipeline:
     def __init__(self, csv_path_states, csv_path_actions):
         self.csv_path_states = csv_path_states
         self.csv_path_actions = csv_path_actions
-        self.data = None
-        self.states_over_time = None
-        self.actions_over_time = None
+        self.states_dataloader = None
+        self.actions_dataloader = None
 
     def read_csv(self):
-        # Read the CSV file using pandas
-        self.data_states = pd.read_csv(self.csv_path_states, header=None)
-        self.data_actions = pd.read_csv(self.csv_path_actions, header=None)
+        self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, 100), batch_size=100, shuffle=True, pin_memory=True)
 
-    def prepare_data(self, batch_size):
-        assert self.data_states != None
-        assert self.data_actions != None
-        # Convert the pandas DataFrame to a PyTorch tensor
-        self.states_over_time = torch.tensor(self.data_states, dtype=torch.float32)
-        self.actions_over_time = torch.tensor(self.data_actions, dtype=torch.float32)
+        return self.dataloader
+    
+class SequenceDataset(Dataset):
+    def __init__(self, states_file, actions_file, seq_len=25):
+        self.states = pd.read_csv(states_file)
+        self.actions = pd.read_csv(actions_file)
+        self.seq_len = seq_len
 
-        # Add batch dimension
-        self.states_over_time = self.states_over_time.unsqueeze(0)  # Assuming you want batch size of 1 initially
-        self.actions_over_time = self.actions_over_time.unsqueeze(0)  # Assuming you want batch size of 1 initially
+    def __len__(self):
+        length = len(self.states) - self.seq_len + 1
+        return length
 
-        # Split into batches
-        self.states_over_time = self.states_over_time.chunk(batch_size, dim=1)
-        self.actions_over_time = self.actions_over_time.chunk(batch_size, dim=1)
-
-    def get_data(self):
-        return {'states': self.states_over_time, 'actions': self.actions_over_time}
+    def __getitem__(self, idx):
+        states_seq = self.states.iloc[idx:idx+self.seq_len, 1:].values
+        actions_seq = self.actions.iloc[idx:idx+self.seq_len, 1:].values
+        return states_seq, actions_seq
