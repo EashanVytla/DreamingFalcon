@@ -11,11 +11,11 @@ actionclock = [];
 
 
 %IMU
-for i = 1:8208
+for i = 1:length(sensorData.x0x2Fmavros0x2Fimu0x2Fdata)
     imuclock(end +1) = ((sensorData.x0x2Fmavros0x2Fimu0x2Fdata{i, 1}.Header.Stamp.Sec)+((sensorData.x0x2Fmavros0x2Fimu0x2Fdata{i, 1}.Header.Stamp.Nsec)/10^9)) - (sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Sec + ((sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Nsec)/10^9));
 end
 
-for i = 1:8208
+for i = 1:length(sensorData.x0x2Fmavros0x2Fimu0x2Fdata)
     imuval(1,i) = sensorData.x0x2Fmavros0x2Fimu0x2Fdata{i, 1}.AngularVelocity.X;
     imuval(2,i) = sensorData.x0x2Fmavros0x2Fimu0x2Fdata{i, 1}.AngularVelocity.Y;
     imuval(3,i) = sensorData.x0x2Fmavros0x2Fimu0x2Fdata{i, 1}.AngularVelocity.Z;
@@ -32,11 +32,11 @@ imu = [imuclock;imuval];
 
 %Mag
 
-for i = 1:8208
+for i = 1:length(sensorData.x0x2Fmavros0x2Fimu0x2Fmag)
     magclock(end +1) = ((sensorData.x0x2Fmavros0x2Fimu0x2Fmag{i, 1}.Header.Stamp.Sec)+((sensorData.x0x2Fmavros0x2Fimu0x2Fmag{i, 1}.Header.Stamp.Nsec)/10^9)) - (sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Sec + ((sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Nsec)/10^9));
 end
 
-for i = 1:8208
+for i = 1:length(sensorData.x0x2Fmavros0x2Fimu0x2Fmag)
     for j = 1:6
         magval(j,i) = -69;
     end
@@ -53,11 +53,11 @@ end
 mag = [magclock;magval];
 
 %Baro
-for i = 1:3055
+for i = 1:length(sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure)
     barroclock(end +1) = ((sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{i, 1}.Header.Stamp.Sec) + ((sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{i, 1}.Header.Stamp.Nsec)/10^9)) - sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Sec + ((sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Nsec)/10^9);
 end
 
-for i = 1:3055
+for i = 1:length(sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure)
     for j = 1:9
         barroval(j,i) = -69;
     end
@@ -73,35 +73,39 @@ end
 barro = [barroclock;barroval];
 
 %GPS 
-for i = 1:1283
+for i = 1:length(sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix)
     gpsclock(end +1) = ((sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix{i, 1}.Header.Stamp.Sec) + ((sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix{i, 1}.Header.Stamp.Nsec)/10^9)) - sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Sec + ((sensorData.x0x2Fmavros0x2Fimu0x2Fstatic_pressure{1, 1}.Header.Stamp.Nsec)/10^9);
 end
 
-for i = 1:1283
+for i = 1:length(sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix)
     for j = 1:10
         gpsval(j,i) = -69;
     end
     gpsval(11,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Ffix{i, 1}.Altitude;
+
+    for j = 18:21
+        gpsval(j,i) = -69;
+    end
+end
+
+for i = 1:length(sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel)
     gpsval(12,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.X;
     gpsval(13,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.Y;
     gpsval(14,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Linear.Z;
     gpsval(15,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.X;
     gpsval(16,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.Y;
     gpsval(17,i) = sensorData.x0x2Fmavros0x2Fglobal_position0x2Fraw0x2Fgps_vel{i, 1}.Twist.Angular.Z;
-    
-    for j = 18:21
-        gpsval(j,i) = -69;
-    end
-end
+end  
+
 
 gps = [gpsclock;gpsval];
 
 %Action
-for i = 1:4935
+for i = 1:length(sensorData.x0x2Fmavros0x2Ftarget_actuator_control)
     actionclock(end +1) = ((sensorData.x0x2Fmavros0x2Ftarget_actuator_control{i, 1}.Header.Stamp.Sec) + ((sensorData.x0x2Fmavros0x2Ftarget_actuator_control{i, 1}.Header.Stamp.Nsec)/10^9)) - sensorData.x0x2Fmavros0x2Ftarget_actuator_control{i, 1}.Header.Stamp.Sec + ((sensorData.x0x2Fmavros0x2Ftarget_actuator_control{i, 1}.Header.Stamp.Nsec)/10^9);
 end
 
-for i = 1:4935
+for i = 1:length(sensorData.x0x2Fmavros0x2Ftarget_actuator_control)
     for j = 1:17
         actval(j,i) = -69;
     end
@@ -130,7 +134,9 @@ for i = 2:22
     end
 end
 
-for i = 2:25689
+thingy = length(Bigboi);
+
+for i = 2:thingy
     for j = 2:22
         if Bigboi(i,j) == -69
             Bigboi(i,j) = Bigboi(i-1,j);
@@ -140,34 +146,34 @@ end
 
 %imu range
 for i = 2:7
-    Bigboi(25690,i) = 25;%max
-    Bigboi(25691,i) = -25;%min
+    Bigboi(thingy + 1,i) = 25;%max
+    Bigboi(thingy + 2,i) = -25;%min
 end
 
 %mag range
 for i = 8:10
-    Bigboi(25690,i) = 25;%max
-    Bigboi(25691,i) = -25;%min
+    Bigboi(thingy + 1,i) = 25;%max
+    Bigboi(thingy + 2,i) = -25;%min
 end
 
 %baro
-Bigboi(25690,11) = 101325;%max
-Bigboi(25691,11) = 0;%min
+Bigboi(thingy + 1,11) = 101325;%max
+Bigboi(thingy + 2,11) = 0;%min
 
 %gps
 
-Bigboi(25690,12) = 50;%max alt
-Bigboi(25691,12) = -50;%min alt
+Bigboi(thingy + 1,12) = 50;%max alt
+Bigboi(thingy + 2,12) = -50;%min alt
 
 for i = 13:18
-    Bigboi(25690,i) = 1;%max
-    Bigboi(25691,i) = -1;%min
+    Bigboi(thingy + 1,i) = 1;%max
+    Bigboi(thingy + 2,i) = -1;%min
 end
 
 %Action
 for i = 19:22
-    Bigboi(25690,i) = 1;
-    Bigboi(25691,i) = -1;
+    Bigboi(thingy + 1,i) = 1;
+    Bigboi(thingy + 2,i) = -1;
 end
 
 %imu stuff
