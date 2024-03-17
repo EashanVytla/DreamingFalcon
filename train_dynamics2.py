@@ -13,9 +13,9 @@ def main():
 
     obs_space = 17
     act_space = 4
-    num_epochs = 5
+    num_epochs = 100
 
-    logger = tools.Logger("logs/First", 0)
+    logger = tools.Logger("logs/OSCTraining", 0)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.cuda.set_device(device)
@@ -35,7 +35,9 @@ def main():
             for name, values in metrics.items():
                 logger.scalar(name, float(np.mean(values)))
                 metrics[name] = []
-            logger.write(step=batch_count)
+        logger.write(step=epoch_count)
+    
+    torch.save(model.state_dict, r"models/firstExperiment/model.pt")
 
 if __name__ == "__main__":
     main()
