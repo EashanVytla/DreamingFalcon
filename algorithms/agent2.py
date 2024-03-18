@@ -74,6 +74,23 @@ class WorldModel(nn.Module):
     print(
             f"Optimizer model_opt has {sum(param.numel() for param in self.parameters())} variables."
         )
+  
+  def valid(self, data):
+    with torch.cuda.amp.autocast(self._use_amp):
+      embed = self.encoder(data['state'][0])
+
+      prior = self.rssm.imagine_with_action(data["action"], embed)
+
+      preds = {}
+      for name, head in self.heads.items():
+        feat = self.rssm.get_feat(prior)
+        pred = head(feat)
+        if type(pred) is dict:
+          preds.update(pred)
+        else:
+          preds[name] = pred
+
+      
 
   def train(self, data):
     with tools.RequiresGrad(self):
@@ -86,6 +103,7 @@ class WorldModel(nn.Module):
         post, prior = self.rssm.observe(
           embed, data["action"]
         )
+
 
         kl_free = self.config['loss_scales']['kl']
         dyn_scale = self.config['loss_scales']['dyn']
@@ -124,9 +142,9 @@ class WorldModel(nn.Module):
 
     metrics.update({f"{name}_loss": to_np(loss) for name, loss in losses.items()})
 
-    metrics["kl_free"] = kl_free
-    metrics["dyn_scale"] = dyn_scale
-    metrics["rep_scale"] = rep_scale
+    #metrics["kl_free"] = kl_free
+    #metrics["dyn_scale"] = dyn_scale
+    #metrics["rep_scale"] = rep_scale
     metrics["dyn_loss"] = to_np(dyn_loss)
     metrics["rep_loss"] = to_np(rep_loss)
     metrics["kl"] = to_np(torch.mean(kl_value))
