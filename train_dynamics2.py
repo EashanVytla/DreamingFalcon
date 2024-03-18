@@ -37,7 +37,7 @@ def main():
                 metrics[name] = []
         logger.write(step=epoch_count)
     
-    torch.save(model.state_dict(), r"models/firstExperiment/model.pt")
+    torch.save(model.state_dict(), r"models/model.pt")
 
 if __name__ == "__main__":
     main()

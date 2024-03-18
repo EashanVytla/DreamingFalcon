@@ -117,6 +117,7 @@ class WorldModel(nn.Module):
 
         preds = {}
         for name, head in self.heads.items():
+          print(name)
           grad_head = name in self.config['grad_heads']
           feat = self.rssm.get_feat(post)
           feat = feat if grad_head else feat.detach()
