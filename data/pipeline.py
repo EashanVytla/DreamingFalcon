@@ -11,7 +11,7 @@ class Pipeline:
         self.actions_dataloader = None
 
     def read_csv(self):
-        self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, 100), batch_size=100, shuffle=True, pin_memory=True)
+        self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, 50), batch_size=400, shuffle=True, pin_memory=True)
 
         return self.dataloader
     
