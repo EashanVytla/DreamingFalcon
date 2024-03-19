@@ -15,7 +15,7 @@ def main():
     act_space = 4
     num_epochs = 100
 
-    logger = tools.Logger("logs/3-19-24", 0)
+    logger = tools.Logger("logs/3-19", 0)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.cuda.set_device(device)
