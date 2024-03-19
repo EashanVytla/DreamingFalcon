@@ -176,6 +176,15 @@ for i = 19:22
     Bigboi(thingy + 2,i) = -1;
 end
 
+siu = 0;
+
+for i = 2:thingy
+    if Bigboi(i-1,1) == Bigboi(i,1)
+        siu = siu + 1;
+    end
+end
+
+%------------------Normalizing----------
 %imu stuff
 Bigboi(:,2) = normalize(Bigboi(:,2),'range');
 Bigboi(:,3) = normalize(Bigboi(:,3),'range');
@@ -207,8 +216,32 @@ Bigboi(:,20) = normalize(Bigboi(:,20),'range');
 Bigboi(:,21) = normalize(Bigboi(:,21),'range');
 Bigboi(:,22) = normalize(Bigboi(:,22),'range');
 
-ActBoi = [Bigboi(:,1),Bigboi(:,19:22)];
-Bigboi = Bigboi(:,1:18);
+Bigboi(:,1) = floor(Bigboi(:,1) * 10^2) / 10^2;
+
+utv = unique(Bigboi(:,1));
+
+otherboi = zeros(1,22);
+
+for i = 4:thingy
+    if Bigboi(i-1,1) == Bigboi(i,1)
+        otherboi(end,:) = Bigboi(i,:);
+    else
+        otherboi(end + 1,:) = Bigboi(i,:);
+    end
+end
+
+
+%------------
+% x = 0;
+% for i = 2:length(otherboi)
+%     if (otherboi(i,1) - otherboi(i-1,1)) > 0.0210
+%         disp(otherboi(i,1) - otherboi(i-1,1))
+%         x = x+1;
+%     end
+% end
+
+ActBoi = [otherboi(:,1),otherboi(:,19:22)];
+Betterboi = otherboi(:,1:18);
 
 
 % Uncomment if Eashan is a bot again
@@ -218,7 +251,7 @@ Bigboi = Bigboi(:,1:18);
 % 
 % Bigboi = Bigboi(1:18,:);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\2023-10-13-07-28-08\states.csv', Bigboi);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\2023-10-13-07-28-08\states.csv', Betterboi);
 
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\2023-10-13-07-28-08\actions.csv', ActBoi);
 
@@ -226,11 +259,11 @@ csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\2023-10-13-07-28-0
 % 
 % disp(hz);
 % 
-% imuhz = 1/(imuclock(2) - imuclock(1));
-% barrohz = 1/(barroclock(2) - barroclock(1));
-% gpshz = 1/(gpsclock(2) - gpsclock(1));
+ imuhz = 1/(imuclock(2000) - imuclock(1999));
+ barrohz = 1/(barroclock(1999) - barroclock(1998));
+ gpshz = 1/(gpsclock(2000) - gpsclock(1999));
 
-%fprintf('IMU: %f\nBarro: %f\nGps: %f\n',imuhz, barrohz, gpshz)
+fprintf('IMU: %f\nBarro: %f\nGps: %f\n',imuhz, barrohz, gpshz)
 
 %disp(sensorData.x0x2Fmavros0x2Fimu0x2Fdata{1, 1}.Header.Stamp.Sec + ((sensorData.x0x2Fmavros0x2Fimu0x2Fdata{1, 1}.Header.Stamp.Nsec)/10^9))
 
