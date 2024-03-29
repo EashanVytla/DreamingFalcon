@@ -3,8 +3,26 @@ import torch.nn as nn
 from testModel import networks
 from testModel import tools
 from utils.utils import build_network
+import copy
 
 to_np = lambda x: x.detach().cpu().numpy()
+
+class RewardEMA:
+    """running mean and std"""
+
+    def __init__(self, device, alpha=1e-2):
+        self.device = device
+        self.alpha = alpha
+        self.range = torch.tensor([0.05, 0.95]).to(device)
+
+    def __call__(self, x, ema_vals):
+        flat_x = torch.flatten(x.detach())
+        x_quantile = torch.quantile(input=flat_x, q=self.range)
+        # this should be in-place operation
+        ema_vals[:] = self.alpha * x_quantile + (1 - self.alpha) * ema_vals
+        scale = torch.clip(ema_vals[1] - ema_vals[0], min=1.0)
+        offset = ema_vals[0]
+        return offset.detach(), scale.detach()
 
 class WorldModel(nn.Module):
   def __init__(self, obs_space, act_space, config):
@@ -12,8 +30,14 @@ class WorldModel(nn.Module):
     self._use_amp = True if config['precision'] == 16 else False
     self.config = config
 
+    self.act_space = act_space
+
+    self.history_size = config['rssm']['history_size']
+
+    self.input_size = obs_space * self.history_size + act_space * self.history_size
+
     self.encoder = networks.MultiEncoder(
-        input_size=obs_space,
+        input_size=self.input_size,
         mlp_keys=self.config['encoder']['mlp_keys'],
         act=self.config['encoder']['act'],
         norm=self.config['encoder']['norm'],
@@ -42,7 +66,7 @@ class WorldModel(nn.Module):
     
     self.heads["decoder"] = networks.MultiDecoder(
       feat_size=self.feat_size,
-      mlp_shapes=(1, obs_space),
+      mlp_shapes=(1, self.input_size),
       mlp_keys=self.config['decoder']['mlp_keys'],
       act=self.config['decoder']['act'],
       norm=self.config['decoder']['norm'],
@@ -75,35 +99,41 @@ class WorldModel(nn.Module):
             f"Optimizer model_opt has {sum(param.numel() for param in self.parameters())} variables."
         )
   
-  def valid(self, data):
-    with torch.cuda.amp.autocast(self._use_amp):
-      embed = self.encoder(data['state'][0])
+  def prepare_data(self, data):
+    concatenated_states = torch.zeros((data['state'].shape[0] - self.history_size, data['state'].shape[1], data['state'].shape[2] * self.history_size + data['action'].shape[2] * self.history_size))
 
-      prior = self.rssm.imagine_with_action(data["action"], embed)
+    # Loop through the batch dimension
+    for batch in range(data['state'].shape[1]):
+      # Loop through the batch length dimension
+      for i in range(self.history_size, data['state'].shape[0]):
+        past_states = data['state'][i-self.history_size:i, batch, :]  # Slicing to get the past 10 states
+        past_actions = data['action'][i-self.history_size:i, batch, :]  # Slicing to get the past 10 actions
+        
+        # Concatenate the past states and actions along the feature dimension
+        concatenated_state = torch.cat((past_states.flatten(), past_actions.flatten()), dim=0)
+        
+        # Store the concatenated state in the output tensor
+        concatenated_states[i-self.history_size, batch, :] = concatenated_state
 
-      preds = {}
-      for name, head in self.heads.items():
-        feat = self.rssm.get_feat(prior)
-        pred = head(feat)
-        if type(pred) is dict:
-          preds.update(pred)
-        else:
-          preds[name] = pred
+    return concatenated_states
 
-      
-
-  def train(self, data):
+  def _train(self, data):
     with tools.RequiresGrad(self):
       with torch.cuda.amp.autocast(self._use_amp):
         data['state'] = data['state'].float()
         data['action'] = data['action'].float()
 
-        embed = self.encoder(data['state'])
+        history_states = self.prepare_data(data)
+
+        history_states = history_states.to(device=self.config['device'])
+
+        data['action'] = data['action'][self.history_size:,:,:]
+
+        embed = self.encoder(history_states)
 
         post, prior = self.rssm.observe(
           embed, data["action"]
         )
-
 
         kl_free = self.config['loss_scales']['kl']
         dyn_scale = self.config['loss_scales']['dyn']
@@ -117,7 +147,6 @@ class WorldModel(nn.Module):
 
         preds = {}
         for name, head in self.heads.items():
-          print(name)
           grad_head = name in self.config['grad_heads']
           feat = self.rssm.get_feat(post)
           feat = feat if grad_head else feat.detach()
@@ -130,7 +159,7 @@ class WorldModel(nn.Module):
         losses = {}
 
         for name, pred in preds.items():
-          loss = -pred.log_prob(data['state'])
+          loss = -pred.log_prob(history_states)
           assert loss.shape == embed.shape[:2], (name, loss.shape)
           losses[name] = loss
         scaled = {
@@ -166,3 +195,90 @@ class WorldModel(nn.Module):
     post = {k: v.detach() for k, v in post.items()}
 
     return post, context, metrics
+  
+class ImagBehavior(nn.Module):
+  def __init__(self, config, world_model):
+    super(ImagBehavior, self).__init__()
+    self._use_amp = True if config['precision'] == 16 else False
+    self._config = config
+    self._world_model = world_model
+    feat_size = config['rssm']['stoch'] + config['rssm']['deter']
+    self.actor = networks.MLP(
+      feat_size,
+      (world_model.act_space,),
+      config['actor']["layers"],
+      config['rssm']['units'],
+      config['rssm']['act'],
+      config['rssm']['norm'],
+      config['actor']["dist"],
+      config['actor']["std"],
+      config['actor']["min_std"],
+      config['actor']["max_std"],
+      absmax=1.0,
+      temp=config['actor']["temp"],
+      unimix_ratio=config['actor']["unimix_ratio"],
+      outscale=config['actor']["outscale"],
+      name="Actor",
+    )
+    self.value = networks.MLP(
+      feat_size,
+      (255,) if config['critic']["dist"] == "symlog_disc" else (),
+      config['critic']["layers"],
+      config['rssm']['units'],
+      config['rssm']['act'],
+      config['rssm']['norm'],
+      config['critic']["dist"],
+      outscale=config['critic']["outscale"],
+      device=config['device'],
+      name="Value",
+    )
+    if config['critic']["slow_target"]:
+      self._slow_value = copy.deepcopy(self.value)
+      self._updates = 0
+    kw = dict(wd=config['weight_decay'], opt=config['model_opt']['opt'], use_amp=self._use_amp)
+    self._actor_opt = tools.Optimizer(
+      "actor",
+      self.actor.parameters(),
+      config['actor']["lr"],
+      config['actor']["eps"],
+      config['actor']["grad_clip"],
+      **kw,
+    )
+    print(
+      f"Optimizer actor_opt has {sum(param.numel() for param in self.actor.parameters())} variables."
+    )
+    self._value_opt = tools.Optimizer(
+      "value",
+      self.value.parameters(),
+      config['critic']["lr"],
+      config['critic']["eps"],
+      config['critic']["grad_clip"],
+      **kw,
+    )
+    print(
+      f"Optimizer value_opt has {sum(param.numel() for param in self.value.parameters())} variables."
+    )
+    if self._config['reward_EMA']:
+      # register ema_vals to nn.Module for enabling torch.save and torch.load
+      self.register_buffer("ema_vals", torch.zeros((2,)).to(self._config['device']))
+      self.reward_ema = RewardEMA(device=self._config['device'])
+
+  def imagine(self, start, policy, horizon):
+    dynamics = self._world_model.rssm
+    flatten = lambda x: x.reshape([-1] + list(x.shape[2:]))
+    start = {k: flatten(v) for k, v in start.items()}
+
+    def step(prev, _):
+      state, _, _ = prev
+      feat = dynamics.get_feat(state)
+      inp = feat.detach()
+      action = policy(inp).sample()
+      succ = dynamics.img_step(state, action)
+      return succ, feat, action
+
+    succ, feats, actions = tools.static_scan(
+      step, [torch.arange(horizon)], (start, None, None)
+    )
+    states = {k: torch.cat([start[k][None], v[:-1]], 0) for k, v in succ.items()}
+
+    return feats, states, actions

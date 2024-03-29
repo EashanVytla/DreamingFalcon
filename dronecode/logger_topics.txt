@@ -1,0 +1,3 @@
+sensor_accel 60
+sensor_gyro 60
+sensor_mag 60

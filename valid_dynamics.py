@@ -1,10 +1,11 @@
-from algorithms.agent2 import WorldModel
+from algorithms.agent2 import WorldModel, ImagBehavior
 from ruamel.yaml import YAML
 from data.pipeline import Pipeline
 import torch
 from tqdm import tqdm
 from testModel import tools
 import numpy as np
+import csv
 
 def main():
     with open("configs.yaml") as f:
@@ -13,31 +14,56 @@ def main():
 
     obs_space = 17
     act_space = 4
-    num_epochs = 100
+    num_iter = 1
+    batch_size = 1
 
-    logger = tools.Logger("logs/OSCTraining", 0)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.cuda.set_device(device)
 
     model = WorldModel(obs_space, act_space, configs)
 
+    model.load_state_dict(torch.load("models/model.pt"))
+    model.eval()
+
+    #img_model = ImagBehavior(configs, model)
+
     model.to(configs['device'])
 
     pipeline = Pipeline("data/2023-10-13-07-28-08/states.csv", "data/2023-10-13-07-28-08/actions.csv")
-    dataloader = pipeline.read_csv()
+    dataloader = pipeline.read_csv(batch_size=batch_size)
 
-    for epoch_count in range(num_epochs):
-        for batch_count, (states, actions) in enumerate(tqdm(dataloader, desc="Epoch 1")):
-            states = states.to('cuda')
-            actions = actions.to('cuda')
-            post, context, metrics = model.train({'state': states, 'action': actions})
-            for name, values in metrics.items():
-                logger.scalar(name, float(np.mean(values)))
-                metrics[name] = []
-        logger.write(step=epoch_count)
+    index, (states, actions) = next(enumerate(iter(dataloader), start=3050))
+
+    #prev_state = model.rssm.initial(batch_size)
+    states = states.to('cuda')
+    actions = actions.to('cuda')
     
-    torch.save(model.state_dict, r"models/firstExperiment/model.pt")
+    states = states.float()
+    actions = actions.float()
+
+    embed = model.encoder(states)
+
+    #post, prior = model.rssm.obs_step(prev_state, actions[:, 0, :], embed_start)
+    #actions = actions[:, 1:, :]
+    #feats, states, actions = img_model.imagine(post, actions, actions.shape[1])
+    
+    states, _ = model.rssm.observe(embed, actions)
+
+    init = {k: v[:, 1] for k, v in states.items()}
+    
+    prior = model.rssm.imagine_with_action(actions, init)
+
+    output = model.heads['decoder'](model.rssm.get_feat(prior)).mode()
+
+    output = output.to('cpu')  # Move the tensor to CPU memory
+
+    output_numpy = output.squeeze(0).detach().numpy()
+    
+    np.savetxt('output.csv', output_numpy, delimiter=',', fmt='%.8f')
+
+    print(f"Starting Index: {index}")
+
 
 if __name__ == "__main__":
     main()

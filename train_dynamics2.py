@@ -11,11 +11,11 @@ def main():
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 17
+    obs_space = 9
     act_space = 4
-    num_epochs = 100
+    num_epochs = 200
 
-    logger = tools.Logger("logs/3-19", 0)
+    logger = tools.Logger("logs/3-29", 0)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.cuda.set_device(device)
@@ -24,14 +24,14 @@ def main():
 
     model.to(configs['device'])
 
-    pipeline = Pipeline("data/2023-10-13-07-28-08/states.csv", "data/2023-10-13-07-28-08/actions.csv")
+    pipeline = Pipeline("data/SimulatedData1/states.csv", "data/SimulatedData1/actions.csv")
     dataloader = pipeline.read_csv()
 
     for epoch_count in range(num_epochs):
         for batch_count, (states, actions) in enumerate(tqdm(dataloader, desc="Epoch 1")):
             states = states.to('cuda')
             actions = actions.to('cuda')
-            post, context, metrics = model.train({'state': states, 'action': actions})
+            post, context, metrics = model._train({'state': states, 'action': actions})
             for name, values in metrics.items():
                 logger.scalar(name, float(np.mean(values)))
                 metrics[name] = []
