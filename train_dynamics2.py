@@ -11,9 +11,9 @@ obs_space = 9
 act_space = 4
 num_epochs = 100
 sequence_length = 50
-batch_size = 50 #Change to 500
+batch_size = 500
 model_directory = "models/SimulatedDataModel1"
-data_directory = "data/SimulatedData1"
+data_directory = "data/SimulatedData8hr"
 log_directory = "logs/4-1"
 
 def main():
