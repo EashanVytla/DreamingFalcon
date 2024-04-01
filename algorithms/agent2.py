@@ -34,7 +34,7 @@ class WorldModel(nn.Module):
 
     self.history_size = config['rssm']['history_size']
 
-    self.input_size = obs_space * self.history_size + act_space * self.history_size
+    self.input_size = obs_space * (self.history_size + 1) + act_space * self.history_size
 
     self.encoder = networks.MultiEncoder(
         input_size=self.input_size,
@@ -100,20 +100,20 @@ class WorldModel(nn.Module):
         )
   
   def prepare_data(self, data):
-    concatenated_states = torch.zeros((data['state'].shape[0] - self.history_size, data['state'].shape[1], data['state'].shape[2] * self.history_size + data['action'].shape[2] * self.history_size))
+    concatenated_states = torch.zeros((data['state'].shape[0], data['state'].shape[1] - self.history_size, data['state'].shape[2] * (self.history_size + 1) + data['action'].shape[2] * self.history_size))
 
     # Loop through the batch dimension
-    for batch in range(data['state'].shape[1]):
+    for batch in range(data['state'].shape[0]):
       # Loop through the batch length dimension
-      for i in range(self.history_size, data['state'].shape[0]):
-        past_states = data['state'][i-self.history_size:i, batch, :]  # Slicing to get the past 10 states
-        past_actions = data['action'][i-self.history_size:i, batch, :]  # Slicing to get the past 10 actions
+      for i in range(self.history_size, data['state'].shape[1]):
+        past_states = data['state'][batch, i-self.history_size:i+1, :]  # Slicing to get the past 10 states
+        past_actions = data['action'][batch, i-self.history_size:i, :]  # Slicing to get the past 10 actions
         
         # Concatenate the past states and actions along the feature dimension
         concatenated_state = torch.cat((past_states.flatten(), past_actions.flatten()), dim=0)
         
         # Store the concatenated state in the output tensor
-        concatenated_states[i-self.history_size, batch, :] = concatenated_state
+        concatenated_states[batch, i-self.history_size, :] = concatenated_state
 
     return concatenated_states
 
@@ -127,7 +127,7 @@ class WorldModel(nn.Module):
 
         history_states = history_states.to(device=self.config['device'])
 
-        data['action'] = data['action'][self.history_size:,:,:]
+        data['action'] = data['action'][:,self.history_size:,:]
 
         embed = self.encoder(history_states)
 

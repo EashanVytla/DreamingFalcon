@@ -17,7 +17,7 @@ from mavsdk.offboard import (OffboardError, PositionNedYaw)
 
 
 async def run():
-    MINUTES = 60
+    MINUTES = 18000
 
     """ Does Offboard control using position NED coordinates. """
 
@@ -69,13 +69,13 @@ async def run():
         print(f"Current time: {time.time()}, Target time: {timeout}")
         await drone.offboard.set_position_ned(
 				PositionNedYaw(rand_n, rand_e, -rand_d, rand_yaw))
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
 
-    print("-- Go 0m North, 10m East, 0m Down \
+    '''print("-- Go 0m North, 10m East, 0m Down \
             within local coordinate system, turn to face South")
     await drone.offboard.set_position_ned(
             PositionNedYaw(0.0, 10.0, 0.0, 180.0))
-    await asyncio.sleep(10)
+    await asyncio.sleep(10)'''
 
     print("-- Stopping offboard")
     try:
@@ -83,6 +83,10 @@ async def run():
     except OffboardError as error:
         print(f"Stopping offboard mode failed \
                 with error code: {error._result.result}")
+        
+    print("-- landing")
+    await drone.action.land()
+
 
 
 if __name__ == "__main__":
