@@ -2,3 +2,6 @@ logs/
 models/
 
 *.pyc
+
+__pycache__/
+*.py[cod]
