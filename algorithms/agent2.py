@@ -4,6 +4,7 @@ from testModel import networks
 from testModel import tools
 from utils.utils import build_network
 import copy
+import time
 
 to_np = lambda x: x.detach().cpu().numpy()
 
@@ -102,18 +103,34 @@ class WorldModel(nn.Module):
   def prepare_data(self, data):
     concatenated_states = torch.zeros((data['state'].shape[0], data['state'].shape[1] - self.history_size, data['state'].shape[2] * (self.history_size + 1) + data['action'].shape[2] * self.history_size))
 
-    # Loop through the batch dimension
-    for batch in range(data['state'].shape[0]):
-      # Loop through the batch length dimension
-      for i in range(self.history_size, data['state'].shape[1]):
-        past_states = data['state'][batch, i-self.history_size:i+1, :]  # Slicing to get the past 10 states
-        past_actions = data['action'][batch, i-self.history_size:i, :]  # Slicing to get the past 10 actions
-        
-        # Concatenate the past states and actions along the feature dimension
-        concatenated_state = torch.cat((past_states.flatten(), past_actions.flatten()), dim=0)
-        
-        # Store the concatenated state in the output tensor
-        concatenated_states[batch, i-self.history_size, :] = concatenated_state
+    # Loop through the batch length dimension
+    for i in range(self.history_size, data['state'].shape[1]):
+      past_states = data['state'][:, i-self.history_size:i+1, :]  # Slicing to get the past 10 states
+      past_actions = data['action'][:, i-self.history_size:i, :]  # Slicing to get the past 10 actions
+      
+      # Concatenate the past states and actions along the feature dimension
+      concatenated_state = torch.cat((past_states.view(500, -1), past_actions.view(500, -1)), dim=1)
+      
+      # Store the concatenated state in the output tensor
+      concatenated_states[:, i-self.history_size, :] = concatenated_state
+
+    return concatenated_states
+
+  def prepare_data_vec(self, data):
+    batch_size, seq_len, state_dim = data['state'].shape
+    action_dim = data['action'].shape[-1]
+
+    states = data['state'].view(batch_size, seq_len, state_dim)
+    actions = data['action'].view(batch_size, seq_len, action_dim)
+
+    states_padded = torch.cat([states, torch.zeros(batch_size, 1, state_dim, device=states.device)], dim=1)
+    actions_padded = torch.cat([actions, torch.zeros(batch_size, 1, action_dim, device=actions.device)], dim=1)
+
+    states_expanded = states_padded.unfold(1, self.history_size + 1, 1)
+    actions_expanded = actions_padded.unfold(1, self.history_size, 1).view(batch_size, seq_len, self.history_size, action_dim)
+
+    concatenated_states = torch.cat([states_expanded, actions_expanded], dim=3)
+    concatenated_states = concatenated_states.view(batch_size, seq_len, (self.history_size + 1) * state_dim + self.history_size * action_dim)
 
     return concatenated_states
 
@@ -124,6 +141,8 @@ class WorldModel(nn.Module):
         data['action'] = data['action'].float()
 
         history_states = self.prepare_data(data)
+
+        print(history_states.shape)
 
         history_states = history_states.to(device=self.config['device'])
 
