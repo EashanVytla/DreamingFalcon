@@ -2,6 +2,7 @@ import torch
 import pandas as pd
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
+import os
 
 class Pipeline:
     def __init__(self, csv_path_states, csv_path_actions):
@@ -11,7 +12,7 @@ class Pipeline:
         self.actions_dataloader = None
 
     def read_csv(self, sequence_length=25, batch_size=500):
-        self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, sequence_length), batch_size=batch_size, shuffle=True, pin_memory=True)
+        self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, sequence_length), num_workers=os.cpu_count(), batch_size=batch_size, shuffle=True, pin_memory=True)
 
         return self.dataloader
     

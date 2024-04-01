@@ -109,7 +109,7 @@ class WorldModel(nn.Module):
       past_actions = data['action'][:, i-self.history_size:i, :]  # Slicing to get the past 10 actions
       
       # Concatenate the past states and actions along the feature dimension
-      concatenated_state = torch.cat((past_states.view(500, -1), past_actions.view(500, -1)), dim=1)
+      concatenated_state = torch.cat((past_states.view(data['state'].shape[0], -1), past_actions.view(data['action'].shape[0], -1)), dim=1)
       
       # Store the concatenated state in the output tensor
       concatenated_states[:, i-self.history_size, :] = concatenated_state
@@ -141,8 +141,6 @@ class WorldModel(nn.Module):
         data['action'] = data['action'].float()
 
         history_states = self.prepare_data(data)
-
-        print(history_states.shape)
 
         history_states = history_states.to(device=self.config['device'])
 
