@@ -12,6 +12,7 @@ act_space = 4
 num_epochs = 100
 sequence_length = 32
 batch_size = 512
+checkpoint = 25
 model_directory = "models/SimulatedDataModel1"
 data_directory = "data/SimulatedData8hr"
 log_directory = "logs/4-1"
@@ -42,15 +43,15 @@ def main():
 
     for epoch_count in range(num_epochs):
         for batch_count, (states, actions) in enumerate(tqdm(dataloader, desc=f"Epoch {epoch_count}")):
-            states = states.to('cuda')
-            actions = actions.to('cuda')
+            states = states.to(configs['device'])
+            actions = actions.to(configs['device'])
             post, context, metrics = model._train({'state': states, 'action': actions})
             for name, values in metrics.items():
                 logger.scalar(name, float(np.mean(values)))
                 metrics[name] = []
         logger.write(step=epoch_count)
 
-        if epoch_count % 2 == 0 and epoch_count != 0:
+        if epoch_count % 25 == 0 and epoch_count != 0:
             torch.save(model.state_dict(), os.path.join(model_directory, "checkpoint.pt"))
 
     torch.save(model.state_dict(), os.path.join(model_directory, "model.pt"))

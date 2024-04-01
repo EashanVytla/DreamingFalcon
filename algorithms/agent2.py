@@ -101,7 +101,7 @@ class WorldModel(nn.Module):
         )
   
   def prepare_data(self, data):
-    concatenated_states = torch.zeros((data['state'].shape[0], data['state'].shape[1] - self.history_size, data['state'].shape[2] * (self.history_size + 1) + data['action'].shape[2] * self.history_size))
+    concatenated_states = torch.zeros((data['state'].shape[0], data['state'].shape[1] - self.history_size, data['state'].shape[2] * (self.history_size + 1) + data['action'].shape[2] * self.history_size), device=data['state'].device)
 
     # Loop through the batch length dimension
     for i in range(self.history_size, data['state'].shape[1]):
@@ -116,24 +116,6 @@ class WorldModel(nn.Module):
 
     return concatenated_states
 
-  def prepare_data_vec(self, data):
-    batch_size, seq_len, state_dim = data['state'].shape
-    action_dim = data['action'].shape[-1]
-
-    states = data['state'].view(batch_size, seq_len, state_dim)
-    actions = data['action'].view(batch_size, seq_len, action_dim)
-
-    states_padded = torch.cat([states, torch.zeros(batch_size, 1, state_dim, device=states.device)], dim=1)
-    actions_padded = torch.cat([actions, torch.zeros(batch_size, 1, action_dim, device=actions.device)], dim=1)
-
-    states_expanded = states_padded.unfold(1, self.history_size + 1, 1)
-    actions_expanded = actions_padded.unfold(1, self.history_size, 1).view(batch_size, seq_len, self.history_size, action_dim)
-
-    concatenated_states = torch.cat([states_expanded, actions_expanded], dim=3)
-    concatenated_states = concatenated_states.view(batch_size, seq_len, (self.history_size + 1) * state_dim + self.history_size * action_dim)
-
-    return concatenated_states
-
   def _train(self, data):
     with tools.RequiresGrad(self):
       with torch.cuda.amp.autocast(self._use_amp):
@@ -142,7 +124,7 @@ class WorldModel(nn.Module):
 
         history_states = self.prepare_data(data)
 
-        history_states = history_states.to(device=self.config['device'])
+        #history_states = history_states.to(device=self.config['device'])
 
         data['action'] = data['action'][:,self.history_size:,:]
 
