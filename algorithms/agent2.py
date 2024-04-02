@@ -114,30 +114,29 @@ class WorldModel(nn.Module):
       # Store the concatenated state in the output tensor
       concatenated_states[:, i-self.history_size, :] = concatenated_state
 
-    return concatenated_states
+    return concatenated_states.to(self.config['device'])
 
   def _valid(self, data):
-    with torch.cuda.amp.autocast(self._use_amp):
-      data['state'] = data['state'].float()
-      data['action'] = data['action'].float()
+    with torch.no_grad():
+      with torch.cuda.amp.autocast(self._use_amp):
+        data['state'] = data['state'].float()
+        data['action'] = data['action'].float()
 
-      history_states = self.prepare_data(data)
+        history_states = self.prepare_data(data)
 
-      data['action'] = data['action'][:,self.history_size:,:]
+        data['action'] = data['action'][:,self.history_size:,:]
 
-      embed = self.encoder(history_states)
+        embed = self.encoder(history_states)
 
-      post, prior = self.rssm.observe(
-          embed, data["action"]
-        )
-      
-      init = {k: v[:, 1] for k, v in post.items()}
+        states, _ = self.rssm.observe(
+            embed, data["action"]
+          )
+        
+        init = {k: v[:, 1] for k, v in states.items()}
 
-      prior = self.rssm.imagine_with_action(data['action'], init)
+        prior = self.rssm.imagine_with_action(data['action'], init)
 
-      outputs = self.heads['decoder'](self.rssm.get_feat(prior)).mode()
-
-      return history_states, outputs
+        return history_states, self.heads['decoder'](self.rssm.get_feat(prior)).mode()
 
   def _train(self, data):
     with tools.RequiresGrad(self):
