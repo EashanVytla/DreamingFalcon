@@ -20,7 +20,7 @@ def main():
 
     obs_space = 9
     act_space = 4
-    batch_size = 1024
+    batch_size = 512
     sequence_length = 32
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

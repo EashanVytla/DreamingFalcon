@@ -53,8 +53,11 @@ def main():
 
         if epoch_count % 25 == 0 and epoch_count != 0:
             torch.save(model.state_dict(), os.path.join(model_directory, "checkpoint.pt"))
+            print("Checkpoint Model saved!")
 
     torch.save(model.state_dict(), os.path.join(model_directory, "model.pt"))
+
+    print("Model saved!")
 
 if __name__ == "__main__":
     main()
