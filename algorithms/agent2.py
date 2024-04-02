@@ -116,6 +116,29 @@ class WorldModel(nn.Module):
 
     return concatenated_states
 
+  def _valid(self, data):
+    with torch.cuda.amp.autocast(self._use_amp):
+      data['state'] = data['state'].float()
+      data['action'] = data['action'].float()
+
+      history_states = self.prepare_data(data)
+
+      data['action'] = data['action'][:,self.history_size:,:]
+
+      embed = self.encoder(history_states)
+
+      post, prior = self.rssm.observe(
+          embed, data["action"]
+        )
+      
+      init = {k: v[:, 1] for k, v in post.items()}
+
+      prior = self.rssm.imagine_with_action(data['action'], init)
+
+      outputs = self.heads['decoder'](self.rssm.get_feat(prior)).mode()
+
+      return history_states, outputs
+
   def _train(self, data):
     with tools.RequiresGrad(self):
       with torch.cuda.amp.autocast(self._use_amp):

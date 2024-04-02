@@ -11,11 +11,11 @@ obs_space = 9
 act_space = 4
 num_epochs = 100
 sequence_length = 32
-batch_size = 512
+batch_size = 1024
 checkpoint = 25
-model_directory = "models/SimulatedDataModel1"
-data_directory = "data/SimulatedData8hr"
-log_directory = "logs/4-1"
+model_directory = "models/SimulatedDataModel2"
+data_directory = "data/SimulatedData8hr/train"
+log_directory = "logs/4-2"
 
 def main():
     assert os.path.exists(data_directory)
