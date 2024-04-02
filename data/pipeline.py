@@ -24,7 +24,6 @@ class SequenceDataset(Dataset):
 
     def __len__(self):
         length = len(self.states) - self.seq_len + 1
-        print(length)
         return length
 
     def __getitem__(self, idx):

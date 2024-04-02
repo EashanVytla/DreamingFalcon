@@ -20,7 +20,7 @@ def main():
 
     obs_space = 9
     act_space = 4
-    batch_size = 256
+    batch_size = 2
     sequence_length = 32
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -38,8 +38,6 @@ def main():
 
     history_size = configs['rssm']['history_size']
     shape = (dataloader.__len__(), batch_size, sequence_length - history_size, obs_space * (history_size + 1) + act_space * history_size)
-
-    print(shape)
 
     outputs = torch.zeros(shape, device=configs['device'])
     history_states = torch.zeros(shape, device=configs['device'])
