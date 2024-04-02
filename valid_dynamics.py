@@ -20,7 +20,7 @@ def main():
 
     obs_space = 9
     act_space = 4
-    batch_size = 2
+    batch_size = 1024
     sequence_length = 32
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -37,7 +37,9 @@ def main():
     dataloader = pipeline.read_csv(sequence_length=sequence_length, batch_size=batch_size)
 
     history_size = configs['rssm']['history_size']
-    shape = (dataloader.__len__(), batch_size, sequence_length - history_size, obs_space * (history_size + 1) + act_space * history_size)
+    shape = (batch_size, sequence_length - history_size, obs_space * (history_size + 1) + act_space * history_size)
+
+    error = torch.zeros(len(dataloader))
 
     outputs = torch.zeros(shape, device=configs['device'])
     history_states = torch.zeros(shape, device=configs['device'])
@@ -46,9 +48,11 @@ def main():
         states = states.to(configs['device'])
         actions = actions.to(configs['device'])
 
-        history_states[batch_count, :, :, :], outputs[batch_count, :, :, :] = model._valid({'state': states, 'action': actions})
-   
-    error = mean_squared_error(history_states, outputs)
+        history_states, outputs = model._valid({'state': states, 'action': actions})
+        error[batch_count] = mean_squared_error(history_states, outputs)
+        print(f"Batch {batch_count} Error: {error[batch_count]}")
+
+    print(f"Mean Error: {torch.mean(error)}")
 
     print(f"Mean Squared Error: {error}")
 
