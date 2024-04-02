@@ -13,4 +13,4 @@ source activate pytorch
 
 #python3 train_dynamics2.py
 python3 valid_dynamics.py
-python3 test_dynamics.py
+#python3 test_dynamics.py
