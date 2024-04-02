@@ -9,7 +9,7 @@ import csv
 import os
 
 data_directory = "data/SimulatedData8hr/valid"
-model_path = "models/SimulatedDataModel1/model.pt"
+model_path = "models/SimulatedDataModel2/model.pt"
 
 def main():
     print("Staring validation...")
