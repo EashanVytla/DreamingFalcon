@@ -8,9 +8,9 @@ import numpy as np
 import os
 import sys
 
-obs_space = 23
+obs_space = 11
 act_space = 4
-num_epochs = 128
+num_epochs = 256
 sequence_length = 32
 batch_size = 512
 checkpoint = 25

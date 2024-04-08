@@ -32,5 +32,5 @@ class SequenceDataset(Dataset):
     def __getitem__(self, idx):
         states_seq = self.states.iloc[idx:idx+self.seq_len, 1:].values
         actions_seq = self.actions.iloc[idx:idx+self.seq_len, 1:].values
-        rewards_seq = self.rewards.iloc[idx:idx+self.seq_len, 1:].values
+        rewards_seq = self.rewards.iloc[idx:idx+self.seq_len, 0:].values
         return states_seq, actions_seq, rewards_seq

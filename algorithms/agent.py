@@ -172,7 +172,7 @@ class WorldModel(nn.Module):
                 prior = self.rssm.imagine_with_action(data["action"], init)
 
                 return (
-                    self.heads["decoder"](self.rssm.get_feat(prior)).mode(),
+                    self.heads["decoder"](self.rssm.get_feat(prior)).mode()
                 )
 
     def _train(self, data):
