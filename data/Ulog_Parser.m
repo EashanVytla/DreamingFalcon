@@ -178,7 +178,7 @@ rewards_set = [];
 
 
 for i = 1:total
-    rewards_set(end+1) = abs(otherboi(i,21) - otherboi(i,17)) + abs(otherboi(i,22) - otherboi(i,18)) + abs(otherboi(i,23) - otherboi(i,19)) + abs(otherboi(i,24) - otherboi(i,20));
+    rewards_set(end+1) = (1 - abs(otherboi(i,21) - otherboi(i,17))) + (1 - abs(otherboi(i,22) - otherboi(i,18))) + (1 - abs(otherboi(i,23) - otherboi(i,19))) + (1 - abs(otherboi(i,24) - otherboi(i,20)));
 end
 
 
