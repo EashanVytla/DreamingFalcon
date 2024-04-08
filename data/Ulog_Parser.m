@@ -25,10 +25,10 @@ for i = 1:length(ans.sensor_accel.A.timestamp_sample)
     imuval(7,i) = ans.sensor_mag.A.x(i);
     imuval(8,i) = ans.sensor_mag.A.y(i);
     imuval(9,i) = ans.sensor_mag.A.z(i);
-    imuval(10,i) = ans.sensor_baro.A.pressure;
-    imuval(11,i) = ans.sensor_baro.B.pressure;
+    imuval(10,i) = ans.sensor_baro.A.pressure(i);
+    imuval(11,i) = ans.sensor_baro.B.pressure(i);
 
-    for j = 10:13
+    for j = 12:23
         imuval(j,i) = -69;
     end
 end
@@ -42,18 +42,22 @@ for i = 1:length(ans.actuator_motors.A.control)
 end
 
 for i = 1:length(ans.actuator_motors.A.control)
-    for j = 1:9
+    for j = 1:11
         actval(j,i) = -69;
     end
     
-actval(10,i) = ans.actuator_motors.A.control(i,1);
-actval(11,i) = ans.actuator_motors.A.control(i,2);
-actval(12,i) = ans.actuator_motors.A.control(i,3);
-actval(13,i) = ans.actuator_motors.A.control(i,4);
-actval(14,i) = ans.vehicle_attitude.A.q(i,1);
-actval(15,i) = ans.vehicle_attitude.A.q(i,2);
-actval(16,i) = ans.vehicle_attitude.A.q(i,3);
-actval(17,i) = ans.vehicle_attitude.A.q(i,4);
+actval(12,i) = ans.actuator_motors.A.control(i,1);
+actval(13,i) = ans.actuator_motors.A.control(i,2);
+actval(14,i) = ans.actuator_motors.A.control(i,3);
+actval(15,i) = ans.actuator_motors.A.control(i,4);
+actval(16,i) = ans.vehicle_attitude.A.q(i,1);
+actval(17,i) = ans.vehicle_attitude.A.q(i,2);
+actval(18,i) = ans.vehicle_attitude.A.q(i,3);
+actval(19,i) = ans.vehicle_attitude.A.q(i,4);
+actval(20,i) = ans.vehicle_attitude_setpoint.A.q_d(i,1);
+actval(21,i) = ans.vehicle_attitude_setpoint.A.q_d(i,2);
+actval(22,i) = ans.vehicle_attitude_setpoint.A.q_d(i,3);
+actval(23,i) = ans.vehicle_attitude_setpoint.A.q_d(i,4);
 
 end
 
@@ -68,7 +72,7 @@ Bigboi = transpose(Bigboi);
 
 Bigboi = sortrows(Bigboi, 1);
 
-for i = 2:18
+for i = 2:24
     if Bigboi(1,i) == -69
         Bigboi(1,i) = 0;
     end
@@ -77,7 +81,7 @@ end
 thingy = length(Bigboi);
 
 for i = 2:thingy
-    for j = 2:18
+    for j = 2:24
         if Bigboi(i,j) == -69
             Bigboi(i,j) = Bigboi(i-1,j);
         end
@@ -120,7 +124,8 @@ Bigboi(:,7) = normalize(Bigboi(:,7),'range');
 Bigboi(:,8) = normalize(Bigboi(:,8),'range');
 Bigboi(:,9) = normalize(Bigboi(:,9),'range');
 Bigboi(:,10) = normalize(Bigboi(:,10),'range');
-
+Bigboi(:,11) = normalize(Bigboi(:,9),'range');
+Bigboi(:,12) = normalize(Bigboi(:,10),'range');
 
 idkboi = Bigboi(2,1);
 for i = 1:length(Bigboi)
@@ -132,7 +137,7 @@ Bigboi(:,1) = floor(Bigboi(:,1) * 10^1) / 10^1;
 
 utv = unique(Bigboi(:,1));
 
-otherboi = zeros(1,18);
+otherboi = zeros(1,24);
 
 for i = 4:thingy
     if Bigboi(i-1,1) == Bigboi(i,1)
@@ -148,6 +153,7 @@ x = 0;
 
 %otherboi = otherboi(1000:end-1000,:);
 
+
 total = length(otherboi);
 
 train = floor(.7*total);
@@ -159,14 +165,14 @@ test = floor(.1 * total);
 
 
 
-ActBoi_train = [otherboi(1:train,1),otherboi(1:train,11:14)];
-Betterboi_train = otherboi(1:train,1:10);
+ActBoi_train = [otherboi(1:train,1),otherboi(1:train,13:16)];
+Betterboi_train = otherboi(1:train,1:12);
 
-ActBoi_val = [otherboi(train:train + val,1),otherboi(train:train + val,11:14)];
-Betterboi_val = otherboi(train:train + val,1:10);
+ActBoi_val = [otherboi(train:train + val,1),otherboi(train:train + val,13:16)];
+Betterboi_val = otherboi(train:train + val,1:12);
 
-ActBoi_test = [otherboi(train + val:train + val + test,1),otherboi(train + val:train + val + test,11:14)];
-Betterboi_test = otherboi(train + val:train + val + test,1:10);
+ActBoi_test = [otherboi(train + val:train + val + test,1),otherboi(train + val:train + val + test,13:16)];
+Betterboi_test = otherboi(train + val:train + val + test,1:12);
 
 rewards_set = [];
 
@@ -191,7 +197,9 @@ rewards_val = [rewards_set(train:train + val)];
 
 rewards_test = [rewards_set(train + val:train + val + test)];
 
-
+rewards_train = transpose(rewards_train);
+rewards_val = transpose(rewards_val);
+rewards_test = transpose(rewards_test);
 
 
 % Uncomment if Eashan is a bot again
@@ -212,6 +220,13 @@ csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\actions_val.
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\states_test.csv', Betterboi_test);
 
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\actions_test.csv', ActBoi_test);
+
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\rewards_train.csv', rewards_train);
+
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\rewards_val.csv', rewards_val);
+
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\rewards_test.csv', rewards_test);
+
 
 % hz = 1/(Bigboi(200,1) - Bigboi(199,1));
 % 
