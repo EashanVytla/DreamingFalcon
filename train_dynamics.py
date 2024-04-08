@@ -3,31 +3,76 @@ from ruamel.yaml import YAML
 from data.pipeline import Pipeline
 import torch
 from tqdm import tqdm
+from modules import tools
+import numpy as np
+import os
+import sys
+
+obs_space = 23
+act_space = 4
+num_epochs = 128
+sequence_length = 32
+batch_size = 512
+checkpoint = 25
+model_directory = "models/SimulatedDataModel4-8"
+data_directory_gl = "data/SimulatedData4-8/solo/train"
+log_directory = "logs/4-8"
 
 def main():
+    if len(sys.argv) > 2:
+        print(f"Loading data from {sys.argv[2]}")
+        data_directory = sys.argv[2]
+        step = 128
+    else:
+        data_directory = data_directory_gl
+        step = 0
+    assert os.path.exists(data_directory)
+
     with open("configs.yaml") as f:
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 17
-    act_space = 4
+    logger = tools.Logger(log_directory, step)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.cuda.set_device(device)
 
     model = WorldModel(obs_space, act_space, configs)
 
+    if len(sys.argv) > 1:
+        print(f"Loading model from {sys.argv[1]}")
+        model.load_state_dict(torch.load(sys.argv[1]))
+
     model.to(configs['device'])
 
-    pipeline = Pipeline("data/2023-10-13-07-28-08/states.csv", "data/2023-10-13-07-28-08/actions.csv")
-    dataloader = pipeline.read_csv()
+    pipeline = Pipeline(os.path.join(data_directory, "states.csv"), os.path.join(data_directory, "actions.csv"), os.path.join(data_directory, "rewards.csv"))
+    dataloader = pipeline.read_csv(sequence_length=sequence_length, batch_size=batch_size)
 
-    for batch_count, (states, actions) in enumerate(tqdm(dataloader, desc="Epoch 1")):
-        states = states.to('cuda')
-        actions = actions.to('cuda')
-        model.train({'state': states, 'action': actions})
-        if(batch_count == 1):
-            break
+    # Check if the directory exists
+    if not os.path.exists(model_directory):
+        # If not, create the directory
+        os.makedirs(model_directory)
+
+    for epoch_count in range(num_epochs):
+        for batch_count, (states, actions, rewards) in enumerate(tqdm(dataloader, desc=f"Epoch {epoch_count}")):
+            states = states.to(configs['device'])
+            actions = actions.to(configs['device'])
+            rewards = rewards.to(configs['device'])
+
+            post, context, metrics = model._train({'state': states, 'action': actions, 'reward': rewards})
+
+            for name, values in metrics.items():
+                logger.scalar(name, float(np.mean(values)))
+                metrics[name] = []
+        logger.write(step=epoch_count)
+
+        if epoch_count % 25 == 0 and epoch_count != 0:
+            torch.save(model.state_dict(), os.path.join(model_directory, "checkpoint.pt"))
+            print("Checkpoint Model saved!")
+
+    torch.save(model.state_dict(), os.path.join(model_directory, "model.pt"))
+
+    print("Model saved!")
 
 if __name__ == "__main__":
     main()

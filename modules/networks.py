@@ -7,7 +7,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch import distributions as torchd
 
-import testModel.tools as tools
+import modules.tools as tools
 
 
 class RSSM(nn.Module):
@@ -529,6 +529,7 @@ class MLP(nn.Module):
                 self.layers.add_module(
                     f"{name}_norm{i}", nn.LayerNorm(units, eps=1e-03)
                 )
+
             self.layers.add_module(f"{name}_act{i}", act())
             if i == 0:
                 inp_dim = units

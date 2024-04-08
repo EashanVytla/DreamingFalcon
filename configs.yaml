@@ -3,7 +3,7 @@
   rssm: {history_size: 15, units: 1024, embedded_state_size : 1024, dyn_mean_act: 'none', dyn_min_std: 0.1, dyn_std_act: 'sigmoid2', hidden_size: 200, deter: 1024, stoch: 32, classes: 32, act: ELU, norm: layer, initial: learned, unimix: 0.01, prior_layers: 3, post_layers: 3, gru_layers: 1, unroll: True}
   encoder: {mlp_keys: '.*', cnn_keys: '.*', act: ELU, norm: layer, mlp_layers: 6, mlp_units: 1024, symlog_inputs: True}
   decoder: {mlp_keys: '.*', cnn_keys: '.*', vector_dist: symlog_mse, act: ELU, norm: layer, mlp_layers: 6, mlp_units: 1024, cnn: simple, cnn_depth: 64, cnn_kernels: [5, 5, 6, 6], cnn_blocks: 2, image_dist: mse, inputs: [deter, stoch], outscale: 1.0}
-  reward_head: {layers: 4, units: 512, act: ELU, norm: layer, dist: symlog, loss_scale: 1.0, outscale: 0.1, inputs: [deter, stoch]}
+  reward_head: {layers: 0, units: 512, act: ELU, norm: layer, dist: symlog_disc, loss_scale: 1.0, outscale: 0.1, inputs: [deter, stoch]}
   cont_head: {layers: 4, units: 512, act: ELU, norm: layer, dist: binary, loss_scale: 1.0, outscale: 0.1, inputs: [deter, stoch]}
   loss_scales: {kl: 1.0, rep: 1.0, dyn: 1.0, reward: 1.0, cont: 1.0}
   model_opt: {opt: adam, lr: 1e-4, eps: 1e-6, clip: 100.0, wd: 1e-2, wd_pattern: 'kernel', warmup: 0}
@@ -18,3 +18,9 @@
   #Img Model
   actor: {layers: 2, dist: 'normal', entropy: 3e-4, unimix_ratio: 0.01, std: 'learned', min_std: 0.1, max_std: 1.0, temp: 0.1, lr: 3e-5, eps: 1e-5, grad_clip: 100.0, outscale: 1.0}
   critic: {layers: 2, dist: 'symlog_disc', slow_target: True, slow_target_update: 1, slow_target_fraction: 0.02, lr: 3e-5, eps: 1e-5, grad_clip: 100.0, outscale: 0.0}
+  discount: 0.997
+  discount_lambda: 0.95
+  imag_horizon: 15
+  imag_gradient: 'dynamics'
+  imag_gradient_mix: 0.0
+  eval_state_mean: False

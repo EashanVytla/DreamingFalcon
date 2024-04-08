@@ -1,15 +1,15 @@
-from algorithms.agent2 import WorldModel, ImagBehavior
+from algorithms.agent import WorldModel, ImagBehavior
 from ruamel.yaml import YAML
 from data.pipeline import Pipeline
 import torch
 from tqdm import tqdm
-from testModel import tools
+from modules import tools
 import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData8hr/test"
-model_path = "models/SimulatedDataModel2/model.pt"
+data_directory = "data/SimulatedData4-8/mixed/test"
+model_path = "models/SimulatedDataModel4-8/model.pt"
 
 def main():
     with open("configs.yaml") as f:
@@ -35,17 +35,18 @@ def main():
 
     model.to(configs['device'])
 
-    pipeline = Pipeline(os.path.join(data_directory, "states.csv"), os.path.join(data_directory, "actions.csv"))
+    pipeline = Pipeline(os.path.join(data_directory, "states.csv"), os.path.join(data_directory, "actions.csv"), os.path.join(data_directory, "rewards.csv"))
     dataloader = pipeline.read_csv(sequence_length=sequence_length, batch_size=batch_size)
 
     history_size = configs['rssm']['history_size']
 
-    _, (states, actions) = next(enumerate(iter(dataloader)))
+    _, (states, actions, rewards) = next(enumerate(iter(dataloader)))
 
     states = states.to(configs['device'])
     actions = actions.to(configs['device'])
+    rewards = rewards.to(configs['device'])
 
-    history_states, outputs = model._valid({'state': states, 'action': actions})
+    outputs = model._valid({'state': states, 'action': actions, 'reward': rewards})
 
     outputs = outputs.to('cpu')  # Move the tensor to CPU memory
 

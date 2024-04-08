@@ -1,15 +1,15 @@
-from algorithms.agent2 import WorldModel, ImagBehavior
+from algorithms.agent import WorldModel, ImagBehavior
 from ruamel.yaml import YAML
 from data.pipeline import Pipeline
 import torch
 from tqdm import tqdm
-from testModel import tools
+from modules import tools
 import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData8hr/valid"
-model_path = "models/SimulatedDataModel2/model.pt"
+data_directory = "data/SimulatedData4-8/mixed/valid"
+model_path = "models/SimulatedDataModel4-8/model.pt"
 
 def main():
     print("Staring validation...")
@@ -18,7 +18,7 @@ def main():
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 9
+    obs_space = 23
     act_space = 4
     batch_size = 512
     sequence_length = 32
@@ -33,19 +33,20 @@ def main():
 
     model.to(configs['device'])
 
-    pipeline = Pipeline(os.path.join(data_directory, "states.csv"), os.path.join(data_directory, "actions.csv"))
+    pipeline = Pipeline(os.path.join(data_directory, "states.csv"), os.path.join(data_directory, "actions.csv"), os.path.join(data_directory, "rewards.csv"))
     dataloader = pipeline.read_csv(sequence_length=sequence_length, batch_size=batch_size)
 
     history_size = configs['rssm']['history_size']
 
     error = 0.0
 
-    for batch_count, (states, actions) in enumerate(tqdm(dataloader, desc=f"Validation")):
+    for batch_count, (states, actions, rewards) in enumerate(tqdm(dataloader, desc=f"Validation")):
         states = states.to(configs['device'])
         actions = actions.to(configs['device'])
+        rewards = rewards.to(configs['device'])
 
-        history_states, outputs = model._valid({'state': states, 'action': actions})
-        error += mean_squared_error(history_states, outputs)
+        outputs = model._valid({'state': states, 'action': actions, 'reward': rewards})
+        error += mean_squared_error(states, outputs)
         print(f"Batch {batch_count} Error: {error}")
         torch.cuda.empty_cache()
 
