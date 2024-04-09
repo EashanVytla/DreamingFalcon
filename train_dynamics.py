@@ -10,12 +10,12 @@ import sys
 
 obs_space = 15
 act_space = 4
-num_epochs = 400
+num_epochs = 512
 sequence_length = 64
-batch_size = 400
+batch_size = 512
 checkpoint = 25
 model_directory = "models/SimulatedDataModel4-9-2"
-data_directory_gl = "data/SimulatedData4-9-2/solo/train"
+data_directory_gl = "data/SimulatedData4-9/solo/train"
 log_directory = "logs/4-9-2"
 
 def main():

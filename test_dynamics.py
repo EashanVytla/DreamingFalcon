@@ -8,7 +8,7 @@ import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData4-9-2/mixed/test"
+data_directory = "data/SimulatedData4-9/mixed/test"
 model_path = "models/SimulatedDataModel4-9-2/model.pt"
 
 def main():
