@@ -12,11 +12,11 @@ obs_space = 11
 act_space = 4
 num_epochs = 256
 sequence_length = 32
-batch_size = 512
+batch_size = 1024
 checkpoint = 25
-model_directory = "models/SimulatedDataModel4-8-2"
+model_directory = "models/SimulatedDataModel4-8-3"
 data_directory_gl = "data/SimulatedData4-8/solo/train"
-log_directory = "logs/4-8-2"
+log_directory = "logs/4-8-3"
 
 def main():
     if len(sys.argv) > 2:
@@ -64,7 +64,7 @@ def main():
             for name, values in metrics.items():
                 logger.scalar(name, float(np.mean(values)))
                 metrics[name] = []
-        logger.write(step=epoch_count)
+        logger.write(step=epoch_count + step)
 
         if epoch_count % 25 == 0 and epoch_count != 0:
             torch.save(model.state_dict(), os.path.join(model_directory, "checkpoint.pt"))
