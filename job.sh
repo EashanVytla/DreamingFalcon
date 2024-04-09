@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=DreamerTraining_Prelim
 #SBATCH --nodes=1 --ntasks-per-node=28 --gpus-per-node=1 --gpu_cmode=shared
-#SBATCH --time=2:00:00
+#SBATCH --time=5:00:00
 #SBATCH --account=PAS2152
 #SBATCH --mail-type=ALL
 
