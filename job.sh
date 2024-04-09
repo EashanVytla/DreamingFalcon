@@ -12,6 +12,6 @@ module load miniconda3/23.3.1-py310  cuda/12.3.0
 source activate pytorch
 
 python3 train_dynamics.py
-python3 train_dynamics.py models/SimulatedDataModel4-8/model.pt data/SimulatedData4-8/mixed/train
-python3 valid_dynamics.py
+python3 train_dynamics.py models/SimulatedDataModel4-8-2/model.pt data/SimulatedData4-8/mixed/train
+#python3 valid_dynamics.py
 python3 test_dynamics.py

@@ -71,7 +71,7 @@ class WorldModel(nn.Module):
 
         self.heads["decoder"] = networks.MultiDecoder(
             feat_size=self.feat_size,
-            mlp_shapes=(1, obs_space),
+            mlp_shapes=(1, self.input_size),
             mlp_keys=self.config["decoder"]["mlp_keys"],
             act=self.config["decoder"]["act"],
             norm=self.config["decoder"]["norm"],
@@ -161,7 +161,7 @@ class WorldModel(nn.Module):
                 history_states = self.prepare_data(data)
 
                 for name, d in data.items():
-                    d = d[:,self.history_size:,:]
+                    data[name] = d[:,self.history_size:,:]
 
                 embed = self.encoder(history_states)
 
@@ -218,7 +218,7 @@ class WorldModel(nn.Module):
 
                 for name, pred in preds.items():
                     if name == "decoder":
-                        loss = -pred.log_prob(data['state'])
+                        loss = -pred.log_prob(history_states)
                     else:
                         loss = -pred.log_prob(data[name])
                     assert loss.shape == embed.shape[:2], (name, loss.shape)

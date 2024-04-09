@@ -18,7 +18,7 @@ def main():
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 23
+    obs_space = 11
     act_space = 4
     batch_size = 512
     sequence_length = 32
@@ -27,6 +27,8 @@ def main():
     torch.cuda.set_device(device)
 
     model = WorldModel(obs_space, act_space, configs)
+
+    print(f"Loading model from {model_path}")
 
     model.load_state_dict(torch.load(model_path))
     model.eval()
@@ -45,8 +47,12 @@ def main():
         actions = actions.to(configs['device'])
         rewards = rewards.to(configs['device'])
 
-        outputs = model._valid({'state': states, 'action': actions, 'reward': rewards})
-        error += mean_squared_error(states, outputs)
+        data = {'state': states, 'action': actions, 'reward': rewards}
+        outputs = model._valid(data)
+
+        print(data['state'].shape)
+
+        error += mean_squared_error(data['state'], outputs)
         print(f"Batch {batch_count} Error: {error}")
         torch.cuda.empty_cache()
 
@@ -59,7 +65,7 @@ def main():
     #np.savetxt('output.csv', output_numpy, delimiter=',', fmt='%.8f')
 
 def mean_squared_error(actual, predicted):
-    return torch.mean((actual - predicted).pow(2))
+    return torch.mean((actual - predicted).pow(2), dim=(0,1))
 
 if __name__ == "__main__":
     main()

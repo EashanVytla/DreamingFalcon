@@ -9,14 +9,14 @@ import csv
 import os
 
 data_directory = "data/SimulatedData4-8/mixed/test"
-model_path = "models/SimulatedDataModel4-8/model.pt"
+model_path = "models/SimulatedDataModel4-8-2/model.pt"
 
 def main():
     with open("configs.yaml") as f:
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 9
+    obs_space = 11
     act_space = 4
     batch_size = 1
 
