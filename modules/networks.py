@@ -16,6 +16,8 @@ class RSSM(nn.Module):
         stoch=30,
         deter=200,
         hidden=200,
+        inp_layers = 1,
+        inp_units = 512,
         rec_depth=1,
         discrete=False,
         act="SiLU",
@@ -35,6 +37,8 @@ class RSSM(nn.Module):
         self._hidden = hidden
         self._min_std = min_std
         self._rec_depth = rec_depth
+        self._inp_layers = inp_layers
+        self._inp_units = inp_units
         self._discrete = discrete
         act = getattr(torch.nn, act)
         self._mean_act = mean_act
@@ -50,10 +54,22 @@ class RSSM(nn.Module):
             inp_dim = self._stoch * self._discrete + num_actions
         else:
             inp_dim = self._stoch + num_actions
-        inp_layers.append(nn.Linear(inp_dim, self._hidden, bias=False))
-        if norm:
-            inp_layers.append(nn.LayerNorm(self._hidden, eps=1e-03))
-        inp_layers.append(act())
+
+        inp_dim_temp = inp_dim
+        units = self._inp_units
+        for i in range(self._inp_layers):
+            inp_layers.append(nn.Linear(inp_dim_temp, self._inp_units, bias=False))
+
+            if norm:
+                inp_layers.append(nn.LayerNorm(self._inp_units, eps=1e-03))
+
+            inp_layers.append(act())
+
+            if i == 0:
+                inp_dim_temp = self._inp_units
+        
+        inp_layers.append(nn.Linear(inp_dim_temp, self._hidden, bias=False))
+
         self._img_in_layers = nn.Sequential(*inp_layers)
         self._img_in_layers.apply(tools.weight_init)
         self._cell = GRUCell(self._hidden, self._deter, norm=norm)

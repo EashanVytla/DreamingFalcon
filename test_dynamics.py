@@ -8,15 +8,15 @@ import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData4-9/mixed/test"
-model_path = "models/SimulatedDataModel4-9/model.pt"
+data_directory = "data/SimulatedData4-9-2/mixed/test"
+model_path = "models/SimulatedDataModel4-9-2/model.pt"
 
 def main():
     with open("configs.yaml") as f:
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 11
+    obs_space = 15
     act_space = 4
     batch_size = 1
 

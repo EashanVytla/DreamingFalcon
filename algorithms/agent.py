@@ -54,6 +54,8 @@ class WorldModel(nn.Module):
             embed=config["rssm"]["embedded_state_size"],
             num_actions=act_space,
             device=config["device"],
+            inp_layers=config["rssm"]["inp_layers"],
+            inp_units=config["rssm"]["units"],
             stoch=config["rssm"]["stoch"],
             deter=config["rssm"]["deter"],
             hidden=config["rssm"]["hidden_size"],

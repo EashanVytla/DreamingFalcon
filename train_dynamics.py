@@ -8,18 +8,17 @@ import numpy as np
 import os
 import sys
 
-obs_space = 11
+obs_space = 15
 act_space = 4
-num_epochs = 512
+num_epochs = 400
 sequence_length = 64
-batch_size = 256
+batch_size = 400
 checkpoint = 25
-model_directory = "models/SimulatedDataModel4-9"
-data_directory_gl = "data/SimulatedData4-9/solo/train"
-log_directory = "logs/4-9"
+model_directory = "models/SimulatedDataModel4-9-2"
+data_directory_gl = "data/SimulatedData4-9-2/solo/train"
+log_directory = "logs/4-9-2"
 
 def main():
-    print("Here")
     if len(sys.argv) > 2:
         print(f"Loading data from {sys.argv[2]}")
         data_directory = sys.argv[2]
@@ -28,8 +27,6 @@ def main():
         data_directory = data_directory_gl
         step = 0
     assert os.path.exists(data_directory)
-
-    print("here")
 
     with open("configs.yaml") as f:
         yaml = YAML()

@@ -8,8 +8,8 @@ import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData4-9/mixed/valid"
-model_path = "models/SimulatedDataModel4-9/model.pt"
+data_directory = "data/SimulatedData4-9-2/mixed/valid"
+model_path = "models/SimulatedDataModel4-9-2/model.pt"
 
 def main():
     print("Staring validation...")
@@ -18,7 +18,7 @@ def main():
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 11
+    obs_space = 15
     act_space = 4
     batch_size = 512
     sequence_length = 32

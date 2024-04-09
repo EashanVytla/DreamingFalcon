@@ -68,6 +68,7 @@ async def runMixed(numSteps):
         print(f"Current time: {i}, Target steps: {numSteps}")
         await drone.offboard.set_position_ned(
 				PositionNedYaw(rand_n, rand_e, -rand_d, rand_yaw))
+        
         await asyncio.sleep(5)
 
     '''print("-- Go 0m North, 10m East, 0m Down \

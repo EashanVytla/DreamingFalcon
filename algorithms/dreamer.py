@@ -118,7 +118,6 @@ def main(config):
 
     logger = tools.Logger(log_directory, 0)
 
-    buffer = 
 
     dreamer = Dreamer(obs_space=obs_space, act_space=act_space, config=configs, logger=logger, buffer)
 
