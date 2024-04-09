@@ -10,19 +10,19 @@ import sys
 
 obs_space = 11
 act_space = 4
-num_epochs = 256
-sequence_length = 32
+num_epochs = 512
+sequence_length = 64
 batch_size = 1024
 checkpoint = 25
-model_directory = "models/SimulatedDataModel4-8-3"
-data_directory_gl = "data/SimulatedData4-8/solo/train"
-log_directory = "logs/4-8-3"
+model_directory = "models/SimulatedDataModel4-9"
+data_directory_gl = "data/SimulatedData4-9/solo/train"
+log_directory = "logs/4-9"
 
 def main():
     if len(sys.argv) > 2:
         print(f"Loading data from {sys.argv[2]}")
         data_directory = sys.argv[2]
-        step = 128
+        step = num_epochs
     else:
         data_directory = data_directory_gl
         step = 0
@@ -39,6 +39,8 @@ def main():
 
     model = WorldModel(obs_space, act_space, configs)
 
+    model.requires_grad_(requires_grad=False)
+
     if len(sys.argv) > 1:
         print(f"Loading model from {sys.argv[1]}")
         model.load_state_dict(torch.load(sys.argv[1]))
@@ -52,6 +54,8 @@ def main():
     if not os.path.exists(model_directory):
         # If not, create the directory
         os.makedirs(model_directory)
+
+    model.requires_grad_(requires_grad=True)
 
     for epoch_count in range(num_epochs):
         for batch_count, (states, actions, rewards) in enumerate(tqdm(dataloader, desc=f"Epoch {epoch_count}")):

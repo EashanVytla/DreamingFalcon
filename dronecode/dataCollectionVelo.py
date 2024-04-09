@@ -61,7 +61,7 @@ async def runMixed(numSteps):
         rand_yaw = random.random() * 5
         rand_n = random.random() * 10
         rand_e = random.random() * 10
-        rand_d = random.random() * 5 + 10
+        rand_d = random.random() * 5 + 15
 
         print(f"-- Go {rand_n}m North, {rand_e}m East, {-rand_d}m Down \
 				within local coordinate system")
@@ -190,6 +190,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if(sys.argv[1] == 'm'):
-        asyncio.run(runMixed(100))
+        asyncio.run(runMixed(400))
     else:
-        asyncio.run(runInd([20, 20, 20, 20]))
+        asyncio.run(runInd([80, 80, 80, 80]))

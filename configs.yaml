@@ -1,7 +1,7 @@
   # World Model
   grad_heads: [decoder, reward, cont]
-  rssm: {history_size: 15, units: 1024, embedded_state_size : 1024, dyn_mean_act: 'none', dyn_min_std: 0.1, dyn_std_act: 'sigmoid2', hidden_size: 200, deter: 1024, stoch: 32, classes: 32, act: ELU, norm: layer, initial: learned, unimix: 0.01, prior_layers: 3, post_layers: 3, gru_layers: 1, unroll: True}
-  encoder: {mlp_keys: '.*', cnn_keys: '.*', act: ELU, norm: layer, mlp_layers: 6, mlp_units: 1024, symlog_inputs: True}
+  rssm: {history_size: 16, units: 1024, embedded_state_size : 1024, dyn_mean_act: 'none', dyn_min_std: 0.1, dyn_std_act: 'sigmoid2', hidden_size: 512, deter: 1024, stoch: 32, classes: 32, act: ELU, norm: layer, initial: learned, unimix: 0.01, prior_layers: 3, post_layers: 3, gru_layers: 4, unroll: True}
+  encoder: {mlp_keys: '.*', cnn_keys: '.*', act: ELU, norm: layer, mlp_layers: 16, mlp_units: 1024, symlog_inputs: True}
   decoder: {mlp_keys: '.*', cnn_keys: '.*', vector_dist: symlog_mse, act: ELU, norm: layer, mlp_layers: 6, mlp_units: 1024, cnn: simple, cnn_depth: 64, cnn_kernels: [5, 5, 6, 6], cnn_blocks: 2, image_dist: mse, inputs: [deter, stoch], outscale: 1.0}
   reward_head: {layers: 0, units: 512, act: ELU, norm: layer, dist: symlog_disc, loss_scale: 1.0, outscale: 0.1, inputs: [deter, stoch]}
   cont_head: {layers: 4, units: 512, act: ELU, norm: layer, dist: binary, loss_scale: 1.0, outscale: 0.1, inputs: [deter, stoch]}
@@ -24,3 +24,23 @@
   imag_gradient: 'dynamics'
   imag_gradient_mix: 0.0
   eval_state_mean: False
+
+  expl_behavior: 'greedy'
+  expl_until: 0
+  expl_extr_scale: 0.0
+  expl_intr_scale: 1.0
+  disag_target: 'stoch'
+  disag_log: True
+  disag_models: 10
+  disag_offset: 1
+  disag_layers: 4
+  disag_units: 400
+  disag_action_cond: False
+
+  #Replay
+  replay: fixed
+  replay_size: 1e6
+  replay_chunk: 64
+  replay_fixed: {length: 0, prio_starts: 0.0, prio_ends: 1.0, sync: 0, minlen: 0}
+  replay_consec: {randomize: False, sync: 0}
+  replay_prio: {prio_starts: 0.0, prio_ends: 1.0, sync: 0, fraction: 0.1, softmax: False, temp: 1.0, constant: 0.0, exponent: 0.5}

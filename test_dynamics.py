@@ -8,8 +8,8 @@ import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData4-8/mixed/test"
-model_path = "models/SimulatedDataModel4-8-3/model.pt"
+data_directory = "data/SimulatedData4-9/mixed/test"
+model_path = "models/SimulatedDataModel4-9/model.pt"
 
 def main():
     with open("configs.yaml") as f:
@@ -29,6 +29,8 @@ def main():
     torch.cuda.set_device(device)
 
     model = WorldModel(obs_space, act_space, configs)
+
+    model.requires_grad_(requires_grad=False)
 
     model.load_state_dict(torch.load(model_path))
     model.eval()
