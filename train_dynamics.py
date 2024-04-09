@@ -12,13 +12,14 @@ obs_space = 11
 act_space = 4
 num_epochs = 512
 sequence_length = 64
-batch_size = 512
+batch_size = 128
 checkpoint = 25
 model_directory = "models/SimulatedDataModel4-9"
 data_directory_gl = "data/SimulatedData4-9/solo/train"
 log_directory = "logs/4-9"
 
 def main():
+    print("Here")
     if len(sys.argv) > 2:
         print(f"Loading data from {sys.argv[2]}")
         data_directory = sys.argv[2]
@@ -27,6 +28,8 @@ def main():
         data_directory = data_directory_gl
         step = 0
     assert os.path.exists(data_directory)
+
+    print("here")
 
     with open("configs.yaml") as f:
         yaml = YAML()
@@ -39,11 +42,11 @@ def main():
 
     model = WorldModel(obs_space, act_space, configs)
 
-    model.requires_grad_(requires_grad=False)
-
     if len(sys.argv) > 1:
+        model.requires_grad_(requires_grad=False)
         print(f"Loading model from {sys.argv[1]}")
         model.load_state_dict(torch.load(sys.argv[1]))
+        model.requires_grad_(requires_grad=True)
 
     model.to(configs['device'])
 
@@ -54,8 +57,6 @@ def main():
     if not os.path.exists(model_directory):
         # If not, create the directory
         os.makedirs(model_directory)
-
-    model.requires_grad_(requires_grad=True)
 
     for epoch_count in range(num_epochs):
         for batch_count, (states, actions, rewards) in enumerate(tqdm(dataloader, desc=f"Epoch {epoch_count}")):
