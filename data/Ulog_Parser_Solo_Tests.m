@@ -236,7 +236,7 @@ total = length(otherboi);
 
 ActBoi = [otherboi(:,1),otherboi(:,13:16)];
 
-Betterboi = otherboi(:,1:12);
+Betterboi = [otherboi(:,1:12),otherboi(:,21:24)];
 
 
 rewards_set = [];
@@ -273,11 +273,13 @@ rewards_set = transpose(rewards_set);
 % 
 % Bigboi = Bigboi(1:18,:);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Solo_Tests\states.csv', Betterboi);
+folder = "SimulatedData4-9";
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Solo_Tests\actions.csv', ActBoi);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\solo\train\states.csv', Betterboi);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Solo_Tests\rewards.csv', rewards_set);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\solo\train\actions.csv', ActBoi);
+
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\solo\train\rewards.csv', rewards_set);
 
 
 

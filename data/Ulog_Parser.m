@@ -166,13 +166,13 @@ test = floor(.1 * total);
 
 
 ActBoi_train = [otherboi(1:train,1),otherboi(1:train,13:16)];
-Betterboi_train = otherboi(1:train,1:12);
+Betterboi_train = [otherboi(1:train,1:12),otherboi(1:train,21:24)];
 
 ActBoi_val = [otherboi(train:train + val,1),otherboi(train:train + val,13:16)];
-Betterboi_val = otherboi(train:train + val,1:12);
+Betterboi_val = [otherboi(train:train + val,1:12),otherboi(train:train + val,21:24)];
 
 ActBoi_test = [otherboi(train + val:train + val + test,1),otherboi(train + val:train + val + test,13:16)];
-Betterboi_test = otherboi(train + val:train + val + test,1:12);
+Betterboi_test = [otherboi(train + val:train + val + test,1:12),otherboi(train + val:train + val + test,21:24)];
 
 rewards_set = [];
 
@@ -209,23 +209,25 @@ rewards_test = transpose(rewards_test);
 % 
 % Bigboi = Bigboi(1:18,:);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\states_train.csv', Betterboi_train);
+folder = "SimulatedData4-9";
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\actions_train.csv', ActBoi_train);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\train\states.csv', Betterboi_train);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\states_val.csv', Betterboi_val);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\train\actions.csv', ActBoi_train);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\actions_val.csv', ActBoi_val);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\valid\states.csv', Betterboi_val);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\states_test.csv', Betterboi_test);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\valid\actions.csv', ActBoi_val);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\actions_test.csv', ActBoi_test);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\test\states.csv', Betterboi_test);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\rewards_train.csv', rewards_train);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\test\actions.csv', ActBoi_test);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\rewards_val.csv', rewards_val);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\train\rewards.csv', rewards_train);
 
-csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\Mixed\rewards_test.csv', rewards_test);
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\valid\rewards.csv', rewards_val);
+
+csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\test\rewards.csv', rewards_test);
 
 
 % hz = 1/(Bigboi(200,1) - Bigboi(199,1));
