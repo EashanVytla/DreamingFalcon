@@ -14,8 +14,8 @@ class Pipeline:
         self.rewards_dataloader = None
 
     def read_csv(self, sequence_length=25, batch_size=500):
-        #self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, self.csv_path_rewards, sequence_length), num_workers=os.cpu_count(), batch_size=batch_size, shuffle=True, pin_memory=True)
-        self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, sequence_length), num_workers=os.cpu_count(), batch_size=batch_size, shuffle=True, pin_memory=True)
+        self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, self.csv_path_rewards, sequence_length), num_workers=os.cpu_count(), batch_size=batch_size, shuffle=True, pin_memory=True)
+        #self.dataloader = DataLoader(SequenceDataset(self.csv_path_states, self.csv_path_actions, sequence_length), num_workers=os.cpu_count(), batch_size=batch_size, shuffle=True, pin_memory=True)
 
         return self.dataloader
     
@@ -23,7 +23,7 @@ class SequenceDataset(Dataset):
     def __init__(self, states_file, actions_file, rewards_file, seq_len=25):
         self.states = pd.read_csv(states_file)
         self.actions = pd.read_csv(actions_file)
-        #self.rewards = pd.read_csv(rewards_file)
+        self.rewards = pd.read_csv(rewards_file)
         self.seq_len = seq_len
 
     def __len__(self):
@@ -33,5 +33,5 @@ class SequenceDataset(Dataset):
     def __getitem__(self, idx):
         states_seq = self.states.iloc[idx:idx+self.seq_len, 1:].values
         actions_seq = self.actions.iloc[idx:idx+self.seq_len, 1:].values
-        #rewards_seq = self.rewards.iloc[idx:idx+self.seq_len, 0:].values
-        return states_seq, actions_seq#, rewards_seq
+        rewards_seq = self.rewards.iloc[idx:idx+self.seq_len, 0:].values
+        return states_seq, actions_seq, rewards_seq

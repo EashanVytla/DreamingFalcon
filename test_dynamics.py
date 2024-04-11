@@ -9,7 +9,7 @@ import csv
 import os
 
 data_directory = "data/SimulatedData8hr/test"
-model_path = "models/SimulatedDataModel4-11-4/model.pt"
+model_path = "models/SimulatedDataModel4-11-5/model.pt"
 
 def main():
     with open("configs.yaml") as f:

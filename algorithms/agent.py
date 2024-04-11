@@ -71,7 +71,7 @@ class WorldModel(nn.Module):
 
         self.feat_size = config["rssm"]["stoch"] + config["rssm"]["deter"]
 
-        self.heads["decoder"] = networks.MultiDecoder(
+        '''self.heads["decoder"] = networks.MultiDecoder(
             feat_size=self.feat_size,
             mlp_shapes=(1, self.input_size),
             mlp_keys=self.config["decoder"]["mlp_keys"],
@@ -81,7 +81,7 @@ class WorldModel(nn.Module):
             mlp_units=self.config["decoder"]["mlp_units"],
             vector_dist=self.config["decoder"]["vector_dist"],
             outscale=self.config["decoder"]["outscale"],
-        )
+        )'''
 
         '''self.heads["reward"] = networks.MLP(
             self.feat_size,
@@ -96,9 +96,11 @@ class WorldModel(nn.Module):
             name="Reward",
         )'''
 
+        self.heads["reward"] = nn.Linear(self.feat_size, 4)
+
         self.encoder.to(self.config["device"])
-        self.heads["decoder"].to(self.config["device"])
-        #self.heads["reward"].to(self.config["device"])
+        #self.heads["decoder"].to(self.config["device"])
+        self.heads["reward"].to(self.config["device"])
 
         self._scales = dict(
             reward=config["reward_head"]["loss_scale"],
@@ -184,11 +186,11 @@ class WorldModel(nn.Module):
             with torch.cuda.amp.autocast(self._use_amp):
                 data["state"] = data["state"].float()
                 data["action"] = data["action"].float()
-                #data["reward"] = data["reward"].float()
+                data["reward"] = data["reward"].float()
 
                 history_states = self.prepare_data(data)
 
-                # history_states = history_states.to(device=self.config['device'])
+                #history_states = history_states.to(device=self.config['device'])
 
                 for name, d in data.items():
                     data[name] = d[:,self.history_size:,:]
@@ -223,9 +225,9 @@ class WorldModel(nn.Module):
                 for name, pred in preds.items():
                     if name == "decoder":
                         loss = -pred.log_prob(history_states)
-                    else:
+                    elif name == "reward":
                         print(data[name].shape)
-                        loss = -pred.log_prob(data[name])
+                        loss = tools.quat_error(pred, data[name])
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
                 scaled = {

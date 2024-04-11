@@ -687,6 +687,26 @@ def static_scan_for_lambda_return(fn, inputs, start):
     outputs = torch.unbind(outputs, dim=0)
     return outputs
 
+def quat_error(q1, q2):
+    # q1 and q2 are both tensors of shape (256, 48, 4)
+    
+    # Compute the conjugate of q2
+    q2_conjugate = torch.stack([
+        q2[:, :, 0],
+        -q2[:, :, 1],
+        -q2[:, :, 2],
+        -q2[:, :, 3]
+    ], dim=-1)
+    
+    print(q2_conjugate.shape)
+
+    # Compute the dot product between q1 and the conjugate of q2
+    q_error = torch.abs((q1 * q2_conjugate).sum(dim=-1))
+    
+    # Compute the loss
+    loss = -q_error
+    
+    return loss
 
 def lambda_return(reward, value, pcont, bootstrap, lambda_, axis):
     # Setting lambda=1 gives a discounted Monte Carlo return.

@@ -9,7 +9,7 @@ import csv
 import os
 
 data_directory = "data/SimulatedData8hr/valid"
-model_path = "models/SimulatedDataModel4-11-4/model.pt"
+model_path = "models/SimulatedDataModel4-11-5/model.pt"
 
 def main():
     print("Staring validation...")
@@ -54,7 +54,7 @@ def main():
 
         print(data['state'].shape)
 
-        error += mean_squared_error(history_states, outputs)
+        error += tools.quat_error(rewards, outputs)
         print(f"Batch {batch_count} Error: {error}")
         torch.cuda.empty_cache()
 
