@@ -16,7 +16,7 @@ batch_size = 256
 checkpoint = 25
 model_directory = "models/SimulatedDataModel4-11"
 data_directory_gl = "data/SimulatedData4-10/solo/train"
-log_directory = "logs/4-10"
+log_directory = "logs/4-11"
 
 def main():
     if len(sys.argv) > 2:
