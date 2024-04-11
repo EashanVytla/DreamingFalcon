@@ -5,7 +5,7 @@
   decoder: {mlp_keys: '.*', cnn_keys: '.*', vector_dist: symlog_mse, act: ELU, norm: layer, mlp_layers: 6, mlp_units: 1024, cnn: simple, cnn_depth: 64, cnn_kernels: [5, 5, 6, 6], cnn_blocks: 2, image_dist: mse, inputs: [deter, stoch], outscale: 1.0}
   reward_head: {layers: 0, units: 512, act: ELU, norm: layer, dist: symlog_mse, loss_scale: 1.0, outscale: 0.1, inputs: [deter, stoch]}
   cont_head: {layers: 4, units: 512, act: ELU, norm: layer, dist: binary, loss_scale: 1.0, outscale: 0.1, inputs: [deter, stoch]}
-  loss_scales: {kl: 1.0, rep: 1.0, dyn: 1.0, reward: 1.0, cont: 1.0}
+  loss_scales: {kl: 1.0, rep: 0.005, dyn: 0.025, reward: 1.0, cont: 1.0}
   model_opt: {opt: adam, lr: 1e-4, eps: 1e-6, clip: 100.0, wd: 1e-2, wd_pattern: 'kernel', warmup: 0}
   wmkl: {impl: mult, scale: 0.1, target: 3.5, min: 1e-3, max: 1.0, vel: 0.1}
   wmkl_balance: 0.8
