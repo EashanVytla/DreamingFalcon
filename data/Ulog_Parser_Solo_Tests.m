@@ -242,12 +242,17 @@ Betterboi = [otherboi(:,1:12),otherboi(:,21:24)];
 rewards_set = [];
 
 
+% for i = 1:total
+%     rewards_set(end+1) = (1 - abs(otherboi(i,21) - otherboi(i,17))) + (1 - abs(otherboi(i,22) - otherboi(i,18))) + (1 - abs(otherboi(i,23) - otherboi(i,19))) + (1 - abs(otherboi(i,24) - otherboi(i,20)));
+% end
+
+
 for i = 1:total
-    rewards_set(end+1) = (1 - abs(otherboi(i,21) - otherboi(i,17))) + (1 - abs(otherboi(i,22) - otherboi(i,18))) + (1 - abs(otherboi(i,23) - otherboi(i,19))) + (1 - abs(otherboi(i,24) - otherboi(i,20)));
+    rewards_set(end+1,:) = otherboi(i,17:20);
 end
 
 
-rewards_set = transpose(rewards_set);
+%rewards_set = transpose(rewards_set);
 
 % 
 % 
@@ -273,7 +278,7 @@ rewards_set = transpose(rewards_set);
 % 
 % Bigboi = Bigboi(1:18,:);
 
-folder = "SimulatedData4-9";
+folder = "SimulatedData4-10";
 
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\solo\train\states.csv', Betterboi);
 

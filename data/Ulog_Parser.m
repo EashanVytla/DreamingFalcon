@@ -177,11 +177,13 @@ Betterboi_test = [otherboi(train + val:train + val + test,1:12),otherboi(train +
 rewards_set = [];
 
 
+% for i = 1:total
+%     rewards_set(end+1) = (1 - abs(otherboi(i,21) - otherboi(i,17))) + (1 - abs(otherboi(i,22) - otherboi(i,18))) + (1 - abs(otherboi(i,23) - otherboi(i,19))) + (1 - abs(otherboi(i,24) - otherboi(i,20)));
+% end
+
 for i = 1:total
-    rewards_set(end+1) = (1 - abs(otherboi(i,21) - otherboi(i,17))) + (1 - abs(otherboi(i,22) - otherboi(i,18))) + (1 - abs(otherboi(i,23) - otherboi(i,19))) + (1 - abs(otherboi(i,24) - otherboi(i,20)));
+    rewards_set(end+1,:) = otherboi(i,17:20);
 end
-
-
 
 train = floor(.7*total);
 
@@ -189,17 +191,17 @@ val = floor(.2 * total);
 
 test = floor(.1 * total);
 
-rewards_train = [rewards_set(1:train)];
+rewards_train = [rewards_set(1:train,:)];
 
 
-rewards_val = [rewards_set(train:train + val)];
+rewards_val = [rewards_set(train:train + val,:)];
 
 
-rewards_test = [rewards_set(train + val:train + val + test)];
+rewards_test = [rewards_set(train + val:train + val + test,:)];
 
-rewards_train = transpose(rewards_train);
-rewards_val = transpose(rewards_val);
-rewards_test = transpose(rewards_test);
+% rewards_train = transpose(rewards_train);
+% rewards_val = transpose(rewards_val);
+% rewards_test = transpose(rewards_test);
 
 
 % Uncomment if Eashan is a bot again
@@ -209,7 +211,7 @@ rewards_test = transpose(rewards_test);
 % 
 % Bigboi = Bigboi(1:18,:);
 
-folder = "SimulatedData4-9";
+folder = "SimulatedData4-10";
 
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\train\states.csv', Betterboi_train);
 

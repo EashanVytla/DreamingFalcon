@@ -1,6 +1,6 @@
 %Backup Test_Comparison
 
-normoutput = csvread('testSequenceOutput4-8-3.csv');
+normoutput = csvread('testSequenceOutput4-9-2.csv');
 
 
 output = normoutput * 50 - 25;
