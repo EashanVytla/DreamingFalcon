@@ -83,7 +83,7 @@ class WorldModel(nn.Module):
             outscale=self.config["decoder"]["outscale"],
         )
 
-        self.heads["reward"] = networks.MLP(
+        '''self.heads["reward"] = networks.MLP(
             self.feat_size,
             (255,) if config["reward_head"]["dist"] == "symlog_disc" else (1, 4),
             config["reward_head"]["layers"],
@@ -94,10 +94,11 @@ class WorldModel(nn.Module):
             outscale=config["reward_head"]["outscale"],
             device=config["device"],
             name="Reward",
-        )
+        )'''
 
         self.encoder.to(self.config["device"])
         self.heads["decoder"].to(self.config["device"])
+        #self.heads["reward"].to(self.config["device"])
 
         self._scales = dict(
             reward=config["reward_head"]["loss_scale"],
