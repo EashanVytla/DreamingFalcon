@@ -175,6 +175,7 @@ class WorldModel(nn.Module):
                 prior = self.rssm.imagine_with_action(data["action"], init)
 
                 return (
+                    history_states,
                     self.heads["decoder"](self.rssm.get_feat(prior)).mode()
                 )
 

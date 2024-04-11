@@ -14,7 +14,7 @@ num_epochs = 256
 sequence_length = 64
 batch_size = 256
 checkpoint = 25
-model_directory = "models/SimulatedDataModel4-10"
+model_directory = "models/SimulatedDataModel4-11"
 data_directory_gl = "data/SimulatedData4-10/solo/train"
 log_directory = "logs/4-10"
 

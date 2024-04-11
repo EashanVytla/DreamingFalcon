@@ -9,7 +9,7 @@ import csv
 import os
 
 data_directory = "data/SimulatedData4-10/mixed/valid"
-model_path = "models/SimulatedDataModel4-10/model.pt"
+model_path = "models/SimulatedDataModel4-11/model.pt"
 
 def main():
     print("Staring validation...")
@@ -21,7 +21,7 @@ def main():
     obs_space = 15
     act_space = 4
     batch_size = 512
-    sequence_length = 32
+    sequence_length = 64
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.cuda.set_device(device)
@@ -50,11 +50,11 @@ def main():
         rewards = rewards.to(configs['device'])
 
         data = {'state': states, 'action': actions, 'reward': rewards}
-        outputs = model._valid(data)
+        history_states, outputs = model._valid(data)
 
         print(data['state'].shape)
 
-        error += mean_squared_error(data['state'], outputs)
+        error += mean_squared_error(history_states, outputs)
         print(f"Batch {batch_count} Error: {error}")
         torch.cuda.empty_cache()
 
