@@ -226,7 +226,6 @@ class WorldModel(nn.Module):
                     if name == "decoder":
                         loss = -pred.log_prob(history_states)
                     elif name == "reward":
-                        print(data[name].shape)
                         loss = tools.quat_error(pred, data[name])
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
@@ -236,6 +235,7 @@ class WorldModel(nn.Module):
                 }
 
                 model_loss = sum(scaled.values()) + kl_loss
+                print(torch.mean(model_loss))
             metrics = self._model_opt(torch.mean(model_loss), self.parameters())
 
         metrics.update({f"{name}_loss": to_np(loss) for name, loss in losses.items()})
