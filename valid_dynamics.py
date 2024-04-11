@@ -8,8 +8,8 @@ import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData4-10/mixed/valid"
-model_path = "models/SimulatedDataModel4-11-3/model.pt"
+data_directory = "data/SimulatedData8hr/valid"
+model_path = "models/SimulatedDataModel4-11-4/model.pt"
 
 def main():
     print("Staring validation...")

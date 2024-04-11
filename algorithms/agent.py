@@ -184,7 +184,7 @@ class WorldModel(nn.Module):
             with torch.cuda.amp.autocast(self._use_amp):
                 data["state"] = data["state"].float()
                 data["action"] = data["action"].float()
-                data["reward"] = data["reward"].float()
+                #data["reward"] = data["reward"].float()
 
                 history_states = self.prepare_data(data)
 

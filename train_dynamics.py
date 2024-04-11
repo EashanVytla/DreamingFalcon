@@ -8,15 +8,15 @@ import numpy as np
 import os
 import sys
 
-obs_space = 15
+obs_space = 9
 act_space = 4
 num_epochs = 256
 sequence_length = 64
 batch_size = 256
 checkpoint = 25
-model_directory = "models/SimulatedDataModel4-11-3"
-data_directory_gl = "data/SimulatedData4-10/solo/train"
-log_directory = "logs/4-11-3"
+model_directory = "models/SimulatedDataModel4-11-4"
+data_directory_gl = "data/SimulatedData8hr/train"
+log_directory = "logs/4-11-4"
 
 def main():
     if len(sys.argv) > 2:
@@ -56,12 +56,14 @@ def main():
         os.makedirs(model_directory)
 
     for epoch_count in range(num_epochs):
-        for batch_count, (states, actions, rewards) in enumerate(tqdm(dataloader, desc=f"Epoch {epoch_count}")):
+        #for batch_count, (states, actions, rewards) in enumerate(tqdm(dataloader, desc=f"Epoch {epoch_count}")):
+        for batch_count, (states, actions) in enumerate(tqdm(dataloader, desc=f"Epoch {epoch_count}")):
             states = states.to(configs['device'])
             actions = actions.to(configs['device'])
-            rewards = rewards.to(configs['device'])
+            #rewards = rewards.to(configs['device'])
 
-            post, context, metrics = model._train({'state': states, 'action': actions, 'reward': rewards})
+            #post, context, metrics = model._train({'state': states, 'action': actions, 'reward': rewards})
+            post, context, metrics = model._train({'state': states, 'action': actions})
 
             for name, values in metrics.items():
                 logger.scalar(name, float(np.mean(values)))
