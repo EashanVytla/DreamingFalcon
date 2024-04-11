@@ -228,7 +228,7 @@ class WorldModel(nn.Module):
                         loss = -pred.log_prob(history_states)
                     elif name == "reward":
                         loss = tools.quat_error(data[name], pred)
-                        print(f"Loss: {loss}")
+                        #print(f"Loss: {loss}")
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
 
@@ -237,13 +237,13 @@ class WorldModel(nn.Module):
                     for key, value in losses.items()
                 }
 
-                print(f"Scaled: {scaled}")
-                print(f"kl Loss: {kl_loss}")
+                #print(f"Scaled: {scaled}")
+                #print(f"kl Loss: {kl_loss}")
 
                 model_loss = sum(scaled.values()) + kl_loss
-                print(f"Model Loss: {model_loss}")
+                #print(f"Model Loss: {model_loss}")
                 mean = torch.mean(model_loss)
-                print(f"Model Loss mean: {mean}")
+                #print(f"Model Loss mean: {mean}")
             metrics = self._model_opt(mean, self.parameters())
 
         metrics.update({f"{name}_loss": to_np(loss) for name, loss in losses.items()})
