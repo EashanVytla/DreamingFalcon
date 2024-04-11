@@ -701,7 +701,7 @@ def quat_error(q1, q2):
     # Compute the dot product between q1 and the conjugate of q2
     q_error = torch.abs((q1 * q2_conjugate).sum(dim=-1))
     
-    return q_error
+    return 1 - q_error
 
 def lambda_return(reward, value, pcont, bootstrap, lambda_, axis):
     # Setting lambda=1 gives a discounted Monte Carlo return.

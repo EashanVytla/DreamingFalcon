@@ -177,8 +177,9 @@ class WorldModel(nn.Module):
                 prior = self.rssm.imagine_with_action(data["action"], init)
 
                 return (
-                    history_states,
-                    self.heads["decoder"](self.rssm.get_feat(prior)).mode()
+                    #history_states,
+                    #self.heads["decoder"](self.rssm.get_feat(prior)).mode()
+                    self.heads["reward"](self.rssm.get_feat(prior))
                 )
 
     def _train(self, data):
@@ -226,7 +227,7 @@ class WorldModel(nn.Module):
                     if name == "decoder":
                         loss = -pred.log_prob(history_states)
                     elif name == "reward":
-                        loss = tools.quat_error(pred, data[name])
+                        loss = tools.quat_error(data[name], pred)
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
                 scaled = {
@@ -235,7 +236,6 @@ class WorldModel(nn.Module):
                 }
 
                 model_loss = sum(scaled.values()) + kl_loss
-                print(torch.mean(model_loss))
             metrics = self._model_opt(torch.mean(model_loss), self.parameters())
 
         metrics.update({f"{name}_loss": to_np(loss) for name, loss in losses.items()})

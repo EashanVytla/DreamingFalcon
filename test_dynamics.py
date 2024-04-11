@@ -9,7 +9,7 @@ import csv
 import os
 
 data_directory = "data/SimulatedData4-10/mixed/valid"
-model_path = "models/SimulatedDataModel4-11-5/checkpoint.pt"
+model_path = "models/SimulatedDataModel4-12/model.pt"
 
 def main():
     with open("configs.yaml") as f:
@@ -18,7 +18,7 @@ def main():
 
     obs_space = 15
     act_space = 4
-    batch_size = 1
+    batch_size = 256
 
     # Open the CSV file, convert it to a list of rows, and count the number of rows
     with open(os.path.join(data_directory, 'states.csv'), 'r') as file:
