@@ -85,7 +85,7 @@ class WorldModel(nn.Module):
 
         self.heads["reward"] = networks.MLP(
             self.feat_size,
-            (255,) if config["reward_head"]["dist"] == "symlog_disc" else (),
+            (255,) if config["reward_head"]["dist"] == "symlog_disc" else (1, 4),
             config["reward_head"]["layers"],
             config["reward_head"]["units"],
             config["reward_head"]["act"],
@@ -222,6 +222,7 @@ class WorldModel(nn.Module):
                     if name == "decoder":
                         loss = -pred.log_prob(history_states)
                     else:
+                        print(data[name].shape)
                         loss = -pred.log_prob(data[name])
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss

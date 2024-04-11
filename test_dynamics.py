@@ -8,8 +8,8 @@ import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData4-9/mixed/test"
-model_path = "models/SimulatedDataModel4-9-2/model.pt"
+data_directory = "data/SimulatedData4-10/mixed/test"
+model_path = "models/SimulatedDataModel4-10/model.pt"
 
 def main():
     with open("configs.yaml") as f:
