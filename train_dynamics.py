@@ -10,13 +10,13 @@ import sys
 
 obs_space = 15
 act_space = 4
-num_epochs = 256
+num_epochs = 128
 sequence_length = 64
-batch_size = 256
+batch_size = 350
 checkpoint = 50
-model_directory = "models/SimulatedDataModel4-12-2"
+model_directory = "models/SimulatedDataModel4-12-3"
 data_directory_gl = "data/SimulatedData4-10/solo/train"
-log_directory = "logs/4-12-2"
+log_directory = "logs/4-12-3"
 
 def main():
     if len(sys.argv) > 2:
