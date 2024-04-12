@@ -703,6 +703,43 @@ def quat_error(q1, q2):
     
     return torch.abs(1 - q_error)
 
+def quat_eucl_dist(q1, q2):
+    # Normalize the quaternions to unit length
+    q1 = q1 / torch.norm(q1, dim=-1, keepdim=True)
+    q2 = q2 / torch.norm(q2, dim=-1, keepdim=True)
+    
+    # Compute the quaternion difference
+    q_diff = q1 - q2
+    
+    # Compute the Euclidean distance on the unit sphere
+    dist = torch.norm(q_diff, dim=-1)
+    
+    return dist
+
+def choose_quaternion_representation(q, q_prev):
+    """
+    Choose the quaternion representation that has the smallest Euclidean distance to the previous representation.
+    
+    Args:
+        q (torch.Tensor): Current quaternions, shape (batch_size, seq_len, 4)
+        q_prev (torch.Tensor): Previous quaternions, shape (batch_size, seq_len, 4)
+        
+    Returns:
+        torch.Tensor: Chosen quaternion representation, shape (batch_size, seq_len, 4)
+    """
+    # Compute the Euclidean distance between the current and previous quaternions
+    dist_q = torch.norm(q - q_prev, dim=-1, keepdim=True)
+    dist_neg_q = torch.norm(-q - q_prev, dim=-1, keepdim=True)
+
+    print(dist_q.shape)
+    print(dist_neg_q.shape)
+    print(q.shape)
+    
+    # Choose the representation with the smaller distance
+    q_chosen = torch.where(dist_q < dist_neg_q, q, -q)
+    
+    return q_chosen
+
 def lambda_return(reward, value, pcont, bootstrap, lambda_, axis):
     # Setting lambda=1 gives a discounted Monte Carlo return.
     # Setting lambda=0 gives a fixed 1-step return.
