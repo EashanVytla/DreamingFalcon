@@ -166,13 +166,13 @@ test = floor(.1 * total);
 
 
 ActBoi_train = [otherboi(1:train,1),otherboi(1:train,13:16)];
-Betterboi_train = [otherboi(1:train,1:12),otherboi(1:train,21:24)];
+Betterboi_train = otherboi(1:train,1:12);
 
 ActBoi_val = [otherboi(train:train + val,1),otherboi(train:train + val,13:16)];
-Betterboi_val = [otherboi(train:train + val,1:12),otherboi(train:train + val,21:24)];
+Betterboi_val = otherboi(train:train + val,1:12);
 
 ActBoi_test = [otherboi(train + val:train + val + test,1),otherboi(train + val:train + val + test,13:16)];
-Betterboi_test = [otherboi(train + val:train + val + test,1:12),otherboi(train + val:train + val + test,21:24)];
+Betterboi_test = otherboi(train + val:train + val + test,1:12);
 
 rewards_set = [];
 
@@ -211,7 +211,7 @@ rewards_test = [rewards_set(train + val:train + val + test,:)];
 % 
 % Bigboi = Bigboi(1:18,:);
 
-folder = "SimulatedData4-10";
+folder = "SimulatedData4-13";
 
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\mixed\train\states.csv', Betterboi_train);
 

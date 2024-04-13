@@ -236,7 +236,7 @@ total = length(otherboi);
 
 ActBoi = [otherboi(:,1),otherboi(:,13:16)];
 
-Betterboi = [otherboi(:,1:12),otherboi(:,21:24)];
+Betterboi = otherboi(:,1:12);
 
 
 rewards_set = [];
@@ -278,7 +278,7 @@ end
 % 
 % Bigboi = Bigboi(1:18,:);
 
-folder = "SimulatedData4-10";
+folder = "SimulatedData4-13";
 
 csvwrite('C:\Users\kbs_s\Documents\GitHub\DreamingFalcon\data\'+folder+'\solo\train\states.csv', Betterboi);
 
