@@ -695,7 +695,8 @@ def quat_loss(q, q_pred):
     q_pred_conj = q_pred_conj / torch.norm(q_pred_conj, dim=-1, keepdim=True)
 
     angle = q_norm * q_pred_conj
-    loss = 1 - torch.sum(angle, dim=-1)
+    loss = torch.abs(1 - torch.sum(angle, dim=-1))
+    #loss = 1 - torch.sum(angle, dim=-1)
 
     '''q_pred_conj = quat_conj(q_pred)
 
