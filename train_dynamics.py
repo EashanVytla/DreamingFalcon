@@ -8,7 +8,7 @@ import numpy as np
 import os
 import sys
 
-obs_space = 15
+obs_space = 11
 act_space = 4
 num_epochs = 128
 sequence_length = 64
