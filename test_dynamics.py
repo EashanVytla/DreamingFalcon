@@ -8,7 +8,7 @@ import numpy as np
 import csv
 import os
 
-data_directory = "data/SimulatedData4-13/mixed/valid"
+data_directory = "data/SimulatedData4-13/mixed/test"
 model_path = "models/SimulatedDataModel4-14/model.pt"
 
 def main():
@@ -16,7 +16,7 @@ def main():
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 15
+    obs_space = 11
     act_space = 4
     batch_size = 256
 

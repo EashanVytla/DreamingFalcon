@@ -688,14 +688,16 @@ def static_scan_for_lambda_return(fn, inputs, start):
     outputs = torch.unbind(outputs, dim=0)
     return outputs
 
-def quat_loss(q, q_pred):
+def quat_loss(q, q_pred, regularizer):
     q_pred_conj = quat_conj(q_pred)
 
     q_norm = q / torch.norm(q, dim=-1, keepdim=True)
-    q_pred_conj = q_pred_conj / torch.norm(q_pred_conj, dim=-1, keepdim=True)
+    #q_pred_conj = q_pred_conj / torch.norm(q_pred_conj, dim=-1, keepdim=True)
+
+    penalty = regularizer * torch.square(torch.sum(torch.square(q_pred_conj), dim=-1) - 1)
 
     angle = q_norm * q_pred_conj
-    loss = torch.abs(1 - torch.sum(angle, dim=-1))
+    loss = torch.abs(1 - torch.sum(angle, dim=-1)) + penalty
     #loss = 1 - torch.sum(angle, dim=-1)
 
     '''q_pred_conj = quat_conj(q_pred)
