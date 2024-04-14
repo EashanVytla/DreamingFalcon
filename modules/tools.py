@@ -11,6 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
+from sympy import Q
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -687,58 +688,74 @@ def static_scan_for_lambda_return(fn, inputs, start):
     outputs = torch.unbind(outputs, dim=0)
     return outputs
 
-def quat_error(q1, q2):
-    # q1 and q2 are both tensors of shape (256, 48, 4)
+def quat_loss(q, q_pred):
+    q_pred_conj = quat_conj(q_pred)
+
+    q_norm = q / torch.norm(q, dim=-1, keepdim=True)
+    q_pred_conj = q_pred_conj / torch.norm(q_pred_conj, dim=-1, keepdim=True)
+
+    angle = q_norm * q_pred_conj
+    loss = 1 - torch.sum(angle, dim=-1)
+
+    '''q_pred_conj = quat_conj(q_pred)
+
+    batch_size, seq_len = q_pred_conj.shape[:2]
+    identity_quaternion = torch.tensor([1.0, 0.0, 0.0, 0.0], device=q_pred_conj.device)
     
+    # Expand the identity quaternion to match the input tensor shape
+    identity_quaternions = identity_quaternion.expand(batch_size, seq_len, 4)
+
+    # Multiply the quaternions and flip the sign of the imaginary components
+    z = identity_quaternion * q_pred_conj
+    
+    # Compute the dot product
+    wtot = torch.sum(z, dim=-1)
+    
+    # Compute the angle between the quaternions
+    angle = 2 * torch.acos(torch.clamp(torch.sqrt(wtot * wtot), -1, 1))'''
+
+    '''print(f"q_error: {q_error}")
+
+    squared = torch.square(q_error)
+
+    print(f"Square: {squared}")
+
+    sum = torch.sum(squared, dim=-1)
+    print(f"sum: {sum}")
+    loss = torch.square(sum - 1)'''
+
+    return loss
+
+def quat_error(q1, q2):
     # Compute the conjugate of q2
-    q2_conjugate = torch.stack([
-        q2[:, :, 0],
-        -q2[:, :, 1],
-        -q2[:, :, 2],
-        -q2[:, :, 3]
-    ], dim=-1)
+    q2_conjugate = quat_conj(q2)
+
+    q1_norm = q1 / torch.norm(q1, dim=-1, keepdim=True)
+    q2_conjugate = q2_conjugate / torch.norm(q2_conjugate, dim=-1, keepdim=True)
+
+    #print(f"q1: {q1}")
+    #print(f"q2: {q2}")
+    #print(f"q2_conj: {q2_conjugate}")
 
     # Compute the dot product between q1 and the conjugate of q2
-    q_error = (q1 * q2_conjugate).sum(dim=-1)
-    
-    return torch.abs(1 - q_error)
 
-def quat_eucl_dist(q1, q2):
-    # Normalize the quaternions to unit length
-    q1 = q1 / torch.norm(q1, dim=-1, keepdim=True)
-    q2 = q2 / torch.norm(q2, dim=-1, keepdim=True)
-    
-    # Compute the quaternion difference
-    q_diff = q1 - q2
-    
-    # Compute the Euclidean distance on the unit sphere
-    dist = torch.norm(q_diff, dim=-1)
-    
-    return dist
+    q_real = q1_norm[..., 0] * q2_conjugate[..., 0] - q1_norm[..., 1] * q2_conjugate[..., 1] - q1_norm[..., 2] * q2_conjugate[..., 2] - q1_norm[..., 3] * q2_conjugate[..., 3]
+    q_imag = q1_norm[..., 0] * q2_conjugate[..., 1] + q1_norm[..., 1] * q2_conjugate[..., 0] + q1_norm[..., 2] * q2_conjugate[..., 3] - q1_norm[..., 3] * q2_conjugate[..., 2]
+    q_jmag = q1_norm[..., 0] * q2_conjugate[..., 2] - q1_norm[..., 1] * q2_conjugate[..., 3] + q1_norm[..., 2] * q2_conjugate[..., 0] + q1_norm[..., 3] * q2_conjugate[..., 1]
+    q_kmag = q1_norm[..., 0] * q2_conjugate[..., 3] + q1_norm[..., 1] * q2_conjugate[..., 2] - q1_norm[..., 2] * q2_conjugate[..., 1] + q1_norm[..., 3] * q2_conjugate[..., 0]
 
-def choose_quaternion_representation(q, q_prev):
-    """
-    Choose the quaternion representation that has the smallest Euclidean distance to the previous representation.
-    
-    Args:
-        q (torch.Tensor): Current quaternions, shape (batch_size, seq_len, 4)
-        q_prev (torch.Tensor): Previous quaternions, shape (batch_size, seq_len, 4)
-        
-    Returns:
-        torch.Tensor: Chosen quaternion representation, shape (batch_size, seq_len, 4)
-    """
-    # Compute the Euclidean distance between the current and previous quaternions
-    dist_q = torch.norm(q - q_prev, dim=-1, keepdim=True)
-    dist_neg_q = torch.norm(-q - q_prev, dim=-1, keepdim=True)
+    q_error = torch.stack([q_real, q_imag, q_jmag, q_kmag], dim=-1)
+    return q_error# / torch.norm(q_error, dim=-1, keepdim=True)
 
-    print(dist_q.shape)
-    print(dist_neg_q.shape)
-    print(q.shape)
-    
-    # Choose the representation with the smaller distance
-    q_chosen = torch.where(dist_q < dist_neg_q, q, -q)
-    
-    return q_chosen
+def quat_conj(q):
+    q2_conjugate = torch.stack([
+            q[:, :, 0],
+            -q[:, :, 1],
+            -q[:, :, 2],
+            -q[:, :, 3]
+        ], dim=-1)
+
+    return q2_conjugate
 
 def lambda_return(reward, value, pcont, bootstrap, lambda_, axis):
     # Setting lambda=1 gives a discounted Monte Carlo return.
@@ -1058,3 +1075,70 @@ def recursively_load_optim_state_dict(obj, optimizers_state_dicts):
         for key in keys:
             obj_now = getattr(obj_now, key)
         obj_now.load_state_dict(state_dict)
+
+def test_quat_loss_zero():
+    test_pred = torch.tensor([[[0.997, 0.234, 0.123, 0.001], [0.235, 0.234, 0.123, 0.001]], [[0.513, 0.322, 0.102, 0.120], [0.454, 0.332, 0.123, 0.342]]], dtype=torch.float32, device="cuda")
+    test_label = torch.tensor([[[0.997, 0.234, 0.123, 0.001], [0.235, 0.234, 0.123, 0.001]], [[0.513, 0.322, 0.102, 0.120], [0.454, 0.332, 0.123, 0.342]]], dtype=torch.float32, device="cuda")
+    not_expected = torch.tensor([[0, 0], [0, 0]], dtype=torch.float32, device="cuda")
+
+    loss = quat_loss(test_label, test_pred)
+
+    print(f"Loss Shape: {loss.shape}")
+    print(f"Loss: {loss}")
+
+    assert torch.allclose(loss, not_expected, 1e-4, 1e-4)
+
+def test_quat_error_zero():
+    test_pred = torch.tensor([[[0.997, 0.234, 0.123, 0.001], [0.235, 0.234, 0.123, 0.001]], [[0.513, 0.322, 0.102, 0.120], [0.454, 0.332, 0.123, 0.342]]], dtype=torch.float32, device="cuda")
+    test_label = torch.tensor([[[0.997, 0.234, 0.123, 0.001], [0.235, 0.234, 0.123, 0.001]], [[0.513, 0.322, 0.102, 0.120], [0.454, 0.332, 0.123, 0.342]]], dtype=torch.float32, device="cuda")
+    expected_error = torch.tensor([[[1, 0, 0, 0], [1, 0, 0, 0]], [[1, 0, 0, 0], [1, 0, 0, 0]]], dtype=torch.float32, device="cuda")
+
+    error = quat_error(test_label, test_pred)
+
+    print(f"Error shape {error.shape}")
+    print(f"Error: {error}")
+
+    assert torch.allclose(error, expected_error, 1e-4, 1e-4)
+
+def test_quat_error_nonzero():
+    test_pred = torch.tensor([[[0.997, 0.234, 0.123, 0.001], [0.235, 0.234, 0.123, 0.001]], [[0.513, 0.322, 0.102, 0.120], [0.454, 0.332, 0.123, 0.342]]], dtype=torch.float32, device="cuda")
+    test_label = torch.tensor([[[0.698, 0.124, 0.764, 0.234], [0.565, 0.235, 0.543, 0.245]], [[0.264, 0.123, 0.573, 0.341], [0.314, 0.565, 0.127, 0.975]]], dtype=torch.float32, device="cuda")
+    non_expected_error = torch.tensor([[[1, 0, 0, 0], [1, 0, 0, 0]], [[1, 0, 0, 0], [1, 0, 0, 0]]], dtype=torch.float32, device="cuda")
+
+    error = quat_error(test_label, test_pred)
+
+    print(f"Error shape {error.shape}")
+    print(f"Error: {error}")
+
+    assert not torch.allclose(error, non_expected_error, 1e-4, 1e-4)
+
+def test_quat_loss_nonzero():
+    test_pred = torch.tensor([[[0.997, 0.234, 0.123, 0.001], [0.235, 0.234, 0.123, 0.001]], [[0.513, 0.322, 0.102, 0.120], [0.454, 0.332, 0.123, 0.342]]], dtype=torch.float32, device="cuda")
+    test_label = torch.tensor([[[0.698, 0.124, 0.764, 0.234], [0.565, 0.235, 0.543, 0.245]], [[0.264, 0.123, 0.573, 0.341], [0.314, 0.565, 0.127, 0.975]]], dtype=torch.float32, device="cuda")
+    not_expected = torch.tensor([[0, 0], [0, 0]], dtype=torch.float32, device="cuda")
+
+    loss = quat_loss(test_label, test_pred)
+
+    print(f"Loss Shape: {loss.shape}")
+    print(f"Loss: {loss}")
+
+    assert not torch.allclose(loss, not_expected, 1e-4, 1e-4)
+
+if __name__ == "__main__":
+    print("test_quat_error_zero...")
+    test_quat_error_zero()
+    print("Passed!")
+
+    print("\n\ntest_quat_error_zero...")
+    test_quat_loss_zero()
+    print("Passed!")
+
+    print("\n\ntest_quat_error_nonzero...")
+    test_quat_error_nonzero()
+    print("Passed!")
+
+    print("\n\ntest_quat_loss_nonzero...")
+    test_quat_loss_nonzero()
+    print("Passed!")
+
+    print("Passed all tests")
