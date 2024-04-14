@@ -96,7 +96,11 @@ class WorldModel(nn.Module):
             name="Reward",
         )'''
 
-        self.heads["reward"] = nn.Linear(self.feat_size, 4)
+        inp_layers = []
+        inp_layers.append(nn.Linear(self.feat_size, 4))
+        inp_layers.append(nn.LayerNorm(4, eps=1e-03))
+
+        self.heads["reward"] = nn.Sequential(*inp_layers)
 
         self.encoder.to(self.config["device"])
         self.heads["decoder"].to(self.config["device"])
@@ -229,7 +233,7 @@ class WorldModel(nn.Module):
                         loss = -pred.log_prob(history_states)
                         #print(f"Decoder Loss: {loss}")
                     elif name == "reward":
-                        loss = tools.quat_loss(data[name], pred, 0.01)
+                        loss = tools.quat_loss(data[name], pred, 0.1)
                         #print(f"Reward Loss: {loss}")
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
