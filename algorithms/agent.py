@@ -229,7 +229,7 @@ class WorldModel(nn.Module):
                         loss = -pred.log_prob(history_states)
                         #print(f"Decoder Loss: {loss}")
                     elif name == "reward":
-                        loss = tools.quat_loss(data[name], pred)
+                        loss = tools.quat_loss(data[name], pred, 0.01)
                         #print(f"Reward Loss: {loss}")
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
