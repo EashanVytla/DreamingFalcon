@@ -530,7 +530,7 @@ class MSEDist:
 
 
 class SymlogDist:
-    def __init__(self, mode, dist="mse", agg="mean", tol=1e-8):
+    def __init__(self, mode, dist="mse", agg="sum", tol=1e-8):
         self._mode = mode
         self._dist = dist
         self._agg = agg
