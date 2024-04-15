@@ -530,7 +530,7 @@ class MSEDist:
 
 
 class SymlogDist:
-    def __init__(self, mode, dist="mse", agg="sum", tol=1e-8):
+    def __init__(self, mode, dist="mse", agg="mean", tol=1e-8):
         self._mode = mode
         self._dist = dist
         self._agg = agg
@@ -545,7 +545,8 @@ class SymlogDist:
     def log_prob(self, value):
         assert self._mode.shape == value.shape
         if self._dist == "mse":
-            distance = (self._mode - symlog(value)) ** 2.0
+            symlog_val = symlog(value)
+            distance = (self._mode - symlog_val) ** 2.0
             distance = torch.where(distance < self._tol, 0, distance)
         elif self._dist == "abs":
             distance = torch.abs(self._mode - symlog(value))

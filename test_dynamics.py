@@ -9,7 +9,7 @@ import csv
 import os
 
 data_directory = "data/SimulatedData4-13/mixed/test"
-model_path = "models/SimulatedDataModel4-14-4/model.pt"
+model_path = "models/SimulatedDataModel4-14-3/checkpoint.pt"
 
 def main():
     with open("configs.yaml") as f:
@@ -54,7 +54,7 @@ def main():
 
     outputs_numpy = outputs.squeeze(0).detach().numpy()
     
-    np.savetxt('data/testSequenceOutput.csv', outputs_numpy, delimiter=',', fmt='%.8f')
+    np.savetxt('data/testSequenceOutput4-14.csv', outputs_numpy, delimiter=',', fmt='%.8f')
 
 if __name__ == "__main__":
     main()
