@@ -71,7 +71,7 @@ class WorldModel(nn.Module):
 
         self.feat_size = config["rssm"]["stoch"] + config["rssm"]["deter"]
 
-        self.heads["decoder"] = networks.MultiDecoder(
+        '''self.heads["decoder"] = networks.MultiDecoder(
             feat_size=self.feat_size,
             mlp_shapes=(1, self.input_size),
             mlp_keys=self.config["decoder"]["mlp_keys"],
@@ -81,7 +81,7 @@ class WorldModel(nn.Module):
             mlp_units=self.config["decoder"]["mlp_units"],
             vector_dist=self.config["decoder"]["vector_dist"],
             outscale=self.config["decoder"]["outscale"],
-        )
+        )'''
 
         '''self.heads["reward"] = networks.MLP(
             self.feat_size,
@@ -108,12 +108,12 @@ class WorldModel(nn.Module):
             if(i == 0):
                 input_size = units
         
-        inp_layers.append(nn.Linear(units, 4))
+        inp_layers.append(nn.Linear(input_size, 4))
 
         self.heads["reward"] = nn.Sequential(*inp_layers)
 
         self.encoder.to(self.config["device"])
-        self.heads["decoder"].to(self.config["device"])
+        #self.heads["decoder"].to(self.config["device"])
         self.heads["reward"].to(self.config["device"])
 
         self._scales = dict(
@@ -240,13 +240,13 @@ class WorldModel(nn.Module):
 
                 for name, pred in preds.items():
                     if name == "decoder":
-                        #print(pred.mean())
+                        print(pred.mean())
                         #print(history_states)
                         loss = -pred.log_prob(history_states)
                         #print(f"Decoder Loss: {loss}")
                     elif name == "reward":
                         loss = tools.quat_loss(data[name], pred, 0.1)
-                        #print(f"Reward Loss: {loss}")
+                        print(f"Reward Loss: {loss}")
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
 
@@ -255,13 +255,13 @@ class WorldModel(nn.Module):
                     for key, value in losses.items()
                 }
 
-                #print(f"Scaled: {scaled}")
-                #print(f"kl Loss: {kl_loss}")
+                print(f"Scaled: {scaled}")
+                print(f"kl Loss: {kl_loss}")
 
                 model_loss = sum(scaled.values()) + kl_loss
                 #print(f"Model Loss: {model_loss}")
                 mean = torch.mean(model_loss)
-                #print(f"Model Loss mean: {mean}")
+                print(f"Model Loss mean: {mean}")
             metrics = self._model_opt(mean, self.parameters())
 
         metrics.update({f"{name}_loss": to_np(loss) for name, loss in losses.items()})
