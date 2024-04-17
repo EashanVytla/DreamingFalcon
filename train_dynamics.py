@@ -8,15 +8,15 @@ import numpy as np
 import os
 import sys
 
-obs_space = 11
+obs_space = 4
 act_space = 4
 num_epochs = 128
 sequence_length = 64
 batch_size = 350
 checkpoint = 50
-model_directory = "models/SimulatedDataModel4-15-1"
+model_directory = "models/SimulatedDataModel4-17"
 data_directory_gl = "data/SimulatedData4-13/solo/train"
-log_directory = "logs/4-15-1"
+log_directory = "logs/4-17"
 
 def main():
     if len(sys.argv) > 2:
@@ -62,7 +62,7 @@ def main():
             actions = actions.to(configs['device'])
             rewards = rewards.to(configs['device'])
 
-            post, context, metrics = model._train({'state': states, 'action': actions, 'reward': rewards})
+            post, context, metrics = model._train({'state': rewards, 'action': actions, 'reward': rewards})
             #post, context, metrics = model._train({'state': states, 'action': actions})
 
             for name, values in metrics.items():

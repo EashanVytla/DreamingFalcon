@@ -9,7 +9,7 @@ import csv
 import os
 
 data_directory = "data/SimulatedData4-13/mixed/valid"
-model_path = "models/SimulatedDataModel4-15-1/model.pt"
+model_path = "models/SimulatedDataModel4-17/model.pt"
 
 def main():
     print("Staring validation...")
@@ -18,7 +18,7 @@ def main():
         yaml = YAML()
         configs = yaml.load(f)
 
-    obs_space = 11
+    obs_space = 4
     act_space = 4
     batch_size = 256
     sequence_length = 64
