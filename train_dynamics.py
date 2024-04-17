@@ -14,9 +14,9 @@ num_epochs = 128
 sequence_length = 64
 batch_size = 350
 checkpoint = 50
-model_directory = "models/SimulatedDataModel4-17"
+model_directory = "models/SimulatedDataModel4-17-1"
 data_directory_gl = "data/SimulatedData4-13/solo/train"
-log_directory = "logs/4-17"
+log_directory = "logs/4-17-1"
 
 def main():
     if len(sys.argv) > 2:

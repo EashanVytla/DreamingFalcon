@@ -71,7 +71,7 @@ class WorldModel(nn.Module):
 
         self.feat_size = config["rssm"]["stoch"] + config["rssm"]["deter"]
 
-        self.heads["decoder"] = networks.MultiDecoder(
+        '''self.heads["decoder"] = networks.MultiDecoder(
             feat_size=self.feat_size,
             mlp_shapes=(1, self.input_size),
             mlp_keys=self.config["decoder"]["mlp_keys"],
@@ -81,7 +81,7 @@ class WorldModel(nn.Module):
             mlp_units=self.config["decoder"]["mlp_units"],
             vector_dist=self.config["decoder"]["vector_dist"],
             outscale=self.config["decoder"]["outscale"],
-        )
+        )'''
 
         '''self.heads["reward"] = networks.MLP(
             self.feat_size,
@@ -96,7 +96,7 @@ class WorldModel(nn.Module):
             name="Reward",
         )'''
 
-        '''inp_layers = []
+        inp_layers = []
         act = self.config["reward_head"]["act"]
         units = config["reward_head"]["units"]
         input_size = self.feat_size
@@ -110,11 +110,11 @@ class WorldModel(nn.Module):
         
         inp_layers.append(nn.Linear(units, 4))
 
-        self.heads["reward"] = nn.Sequential(*inp_layers)'''
+        self.heads["reward"] = nn.Sequential(*inp_layers)
 
         self.encoder.to(self.config["device"])
-        self.heads["decoder"].to(self.config["device"])
-        #self.heads["reward"].to(self.config["device"])
+        #self.heads["decoder"].to(self.config["device"])
+        self.heads["reward"].to(self.config["device"])
 
         self._scales = dict(
             decoder=config["decoder"]["loss_scale"],
