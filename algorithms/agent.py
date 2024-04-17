@@ -206,6 +206,8 @@ class WorldModel(nn.Module):
 
                 history_states = self.prepare_data(data)
 
+                print(history_states.shape)
+
                 #history_states = history_states.to(device=self.config['device'])
 
                 for name, d in data.items():
