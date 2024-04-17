@@ -178,12 +178,12 @@ class WorldModel(nn.Module):
                 data["action"] = data["action"].float()
                 data['reward'] = data['reward'].float()
 
-                history_states = self.prepare_data(data)
+                '''history_states = self.prepare_data(data)
 
                 for name, d in data.items():
-                    data[name] = d[:,self.history_size:,:]
+                    data[name] = d[:,self.history_size:,:]'''
 
-                embed = self.encoder(history_states)
+                embed = self.encoder(data["states"])
 
                 states, _ = self.rssm.observe(embed, data["action"])
 
@@ -204,16 +204,14 @@ class WorldModel(nn.Module):
                 data["action"] = data["action"].float()
                 data["reward"] = data["reward"].float()
 
-                history_states = self.prepare_data(data)
-
-                print(history_states.shape)
+                #history_states = self.prepare_data(data)
 
                 #history_states = history_states.to(device=self.config['device'])
 
-                for name, d in data.items():
-                    data[name] = d[:,self.history_size:,:]
+                '''for name, d in data.items():
+                    data[name] = d[:,self.history_size:,:]'''
 
-                embed = self.encoder(history_states)
+                embed = self.encoder(data['state'])
 
                 post, prior = self.rssm.observe(embed, data["action"])
 
@@ -244,10 +242,10 @@ class WorldModel(nn.Module):
                     if name == "decoder":
                         #print(pred.mean())
                         #print(history_states)
-                        loss = -pred.log_prob(history_states)
+                        loss = -pred.log_prob(data['state'])
                         #print(f"Decoder Loss: {loss}")
                     elif name == "reward":
-                        loss = tools.quat_loss(data[name], pred, 0.1)
+                        loss = tools.quat_loss(data['reward'], pred, 0.1)
                         #print(f"Reward Loss: {loss}")
                     assert loss.shape == embed.shape[:2], (name, loss.shape)
                     losses[name] = loss
