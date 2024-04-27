@@ -1,4 +1,4 @@
-# DreamingFalcon
+# Dreaming Falcon
 CSE 5539 Intermediate Studies in AI project
 
 Traditional control methods such as PID controllers have been widely used for quad-copter control. However, these approaches often struggle to maintain stability in complex scenarios or adapt to changing environmental conditions. Additionally, they may not fully exploit the capabilities of modern drone hardware. Therefore, there is a pressing need for innovative control algorithms capable of overcoming these limitations. Deep Reinforcement Learning has the potential to enhance the stability and maneuverability of drones, particularly in dynamic environments or adverse weather conditions. To learn a complex task like learning to fly, the drone must learn from lots of experience. Dreaming Falcon presents a solution using Model-Based Reinforcement Learning based on the Dreamerv3 paper \cite{Hafner2023} that increases the sample efficiency of deep reinforcement learning. This approach can learn flight dynamics and optimize control actions in real-time. This paper delves into the significance of exploring Dreaming Falcon's potential.
