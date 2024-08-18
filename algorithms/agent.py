@@ -183,7 +183,7 @@ class WorldModel(nn.Module):
                 for name, d in data.items():
                     data[name] = d[:,self.history_size:,:]'''
 
-                embed = self.encoder(data["states"])
+                embed = self.encoder(data["state"])
 
                 states, _ = self.rssm.observe(embed, data["action"])
 

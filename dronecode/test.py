@@ -39,10 +39,12 @@ async def run():
     print("-- Arming")
     await drone.action.arm()
 
+    await drone.action.set_takeoff_altitude(10)
+
     print("-- Taking off")
     await drone.action.takeoff()
 
-    await asyncio.sleep(10)
+    await asyncio.sleep(15)
 
     print("-- Setting initial setpoint")
     await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, 0.0, 0.0))
@@ -57,19 +59,26 @@ async def run():
         await drone.action.disarm()
         return
 
-    timeout = time.time() + 60*MINUTES #5 minutes
-    while(time.time() < timeout):
-        rand_yaw = random.random() * 360
-        rand_n = random.random() * 10
-        rand_e = random.random() * 10
-        rand_d = random.random() * 5 + 10
+    await drone.offboard.set_position_ned(
+            PositionNedYaw(100.0, 0.0, -10.0, 0.0))
+    
+    await asyncio.sleep(10)
 
-        print(f"-- Go {rand_n}m North, {rand_e}m East, {-rand_d}m Down \
-				within local coordinate system")
-        print(f"Current time: {time.time()}, Target time: {timeout}")
-        await drone.offboard.set_position_ned(
-				PositionNedYaw(rand_n, rand_e, -rand_d, rand_yaw))
-        await asyncio.sleep(10)
+    await drone.offboard.set_position_ned(
+                PositionNedYaw(100.0, 100.0, -10.0, 90.0))
+    
+    await asyncio.sleep(10)
+
+    await drone.offboard.set_position_ned(
+                PositionNedYaw(0.0, 100.0, -10.0, 180.0))
+    
+    await asyncio.sleep(10)
+
+    await drone.offboard.set_position_ned(
+                PositionNedYaw(0.0, 0.0, -10.0, 270.0))
+    
+    await asyncio.sleep(10)
+
 
     '''print("-- Go 0m North, 10m East, 0m Down \
             within local coordinate system, turn to face South")
